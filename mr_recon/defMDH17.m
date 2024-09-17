@@ -1,0 +1,26 @@
+function mdh17=defMDH17()
+    mdh17.flags=int32(0); % ulFlagsAndDMALength
+    mdh17.measuid=int32(0); % lMeasUID
+    mdh17.scancntr=int32(0);% ulScanCounter
+    mdh17.timestamp=int32(0); % ulTimeStamp                   
+    mdh17.pmutime=int32(0); % ulPMUTimeStamp                
+    mdh17.evalmask=zeros(2,1,'int32'); % aulEvalInfoMask[MDH_NUMBEROFEVALINFOMASK] 
+    mdh17.samples=int16(0); % ushSamplesInScan              
+    mdh17.channels=int16(0); % ushUsedChannels     
+    mdh17.loopcnts=zeros(14,1,'int16'); % sLoopCounter sLC
+    mdh17.cutoff=zeros(2,1,'int16'); % sCutOffData sCutOff
+    mdh17.ksccol=int16(0); % ushKSpaceCentreColumn         
+    mdh17.coilsel=int16(0); % ushCoilSelect                 
+    mdh17.ro_off=single(0); % fReadOutOffcentre             
+    mdh17.lasstrf=int32(0); % ulTimeSinceLastRF             
+    mdh17.kscline=int16(0); % ushKSpaceCentreLineNo         
+    mdh17.kscpart=int16(0); % ushKSpaceCentrePartitionNo    
+    mdh17.te=single(0.0); % aushIceProgramPara[0]
+    mdh17.kpe=single(0.0); % aushIceProgramPara[1]
+    mdh17.ramp=int16(0); % aushFreePara[0] 
+    mdh17.flat=int16(0); % aushFreePara[1] 
+    mdh17.unused=zeros(2,1,'int16'); % aushFreePara[2-3] 
+    mdh17.slicedat=zeros(7,1,'single'); % sSliceData sSD
+    mdh17.chan_id=int16(0); % ushChannelId                  
+    mdh17.tabpn=int16(0);% ushPTABPosNeg                 
+end
