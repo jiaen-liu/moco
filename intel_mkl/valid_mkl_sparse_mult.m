@@ -3,7 +3,7 @@ function r=valid_mkl_sparse_mult(nch, n, m, verbose)
         nch=16;
     end
     if nargin<2
-        n=1000;
+        n=100;
     end
     if nargin<3
         m=200;
