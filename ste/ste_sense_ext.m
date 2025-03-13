@@ -76,6 +76,15 @@ function [b1,cp,cp_im]=ste_sense_ext(par,sorted_ste)
     if field_true(sorted_ste,'sense_philips')
         im_pimg=permute(im_pimg,[2,3,1,4]);
         mask_pimg=permute(mask_pimg,[2,3,1]);
+        if ~isempty(ref_pha)
+            ref_pha=permute(ref_pha,[2,3,1]);
+        end
+    elseif isfield(par,'sense_permute')
+        im_pimg=permute(im_pimg,[par.sense_permute(:).',4]);
+        mask_pimg=permute(mask_pimg,par.sense_permute(:).');
+        if ~isempty(ref_pha)
+            ref_pha=permute(ref_pha,par.sense_permute(:).');
+        end
     end
     if ~isfield(par,'frac_sense_sm')
         par.frac_sense_sm=8;
@@ -93,6 +102,12 @@ function [b1,cp,cp_im]=ste_sense_ext(par,sorted_ste)
     
     if field_true(sorted_ste,'sense_philips')
        b1=permute(b1,[3,1,2,4]);
+    elseif isfield(par,'sense_permute')
+        rev_permute=zeros(1,3);
+        for i=1:3
+            rev_permute(i)=find(par.sense_permute(:)==i);
+        end
+        b1=permute(b1,[rev_permute,4]);
     end
     b1=covNorm(b1,inv(sorted_ste.inv_cov),4);
 % $$$     if para.freq/42.58e6>6

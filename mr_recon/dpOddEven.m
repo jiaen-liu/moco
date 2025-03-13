@@ -1,3 +1,4 @@
+% 2025-03-05, Jiaen Liu: fix bug in phase wrapping issue
 % 2023-04-28, Jiaen Liu: avoid phase wrapping issue at the expected
 % reference point (intercept) 
 % 2022-10-26, Jiaen Liu: In case 20221013_2 the navigator showed lots of artifact It was due to the mask is too small, modified [y,c]=polypha1d(dpc,maskDel,ord,maskDel); to 
@@ -63,36 +64,47 @@ function [y,c,dpc,dpc_2e]=dpOddEven(d,ord,frac,nofit)
             % avoid phase wrapping issue at the expected
             % reference point (intercept)
             idx_mask=find(mask);
-            n_center=10;
+            n_center=min(15,length(idx_mask));
+            idx_mask_tmp=idx_mask(1:floor(length(idx_mask)/n_center):end);
+            n_center=length(idx_mask_tmp);
+            if mod(n_center,2)==0
+                n_center=n_center-1;
+            end
             idx_mask=idx_mask(1:floor(length(idx_mask)/n_center):end);
-            n_center=length(idx_mask);
             dif=zeros(n_center,1);
+            difabs=zeros(n_center,1);
             y=zeros(nr,n_center);
             c=zeros(ord+1,n_center);
+            n_wrap_2e=[0].';
+            n_wrap=length(n_wrap_2e);
+            n_wrap_2e_est=repmat(n_wrap_2e,n_center);
+            n_wrap_3e_est=zeros(n_wrap,n_center);
             for i=1:n_center
                 [y3e,c3e]=polypha1d(dpc,mask,ord,maskDel,...
                                     idx_mask(i));
-                y3e=y3e/2;
-                c3e=c3e/2;
-                [y2e,c2e]=polypha1d(dpc_2e,mask,ord,maskDel,...
-                                    idx_mask(i));
+                y3e=y3e;
+                c3e=c3e;
                 y(:,i)=y3e;
                 c(:,i)=c3e;
-                dif(i)=mean(abs(y3e(mask)-y2e(mask)));
+                [y2e,c2e]=polypha1d(dpc_2e,mask,ord,maskDel,...
+                                    idx_mask(i));
+                for iwrap=1:n_wrap
+                    n_wrap_3e_est(iwrap,i)=...
+                        mean((2*y2e(mask)+4*pi*n_wrap_2e_est(iwrap)-...
+                              y3e(mask))/2/pi);
+                end
             end
-            [~,imin]=min(abs(dif));
-            % if none center point gives reasonable result
-            if abs(dif(imin))>pi/2
-                dif_sort=sort(dif);
-                dif_median=dif_sort(floor(n_center/2));
-                idx_median=find(dif==dif_median,1);
-                y=y(:,idx_median)-round(dif_median/pi)*pi;
-                c=c(:,idx_median);
-                c(1)=c(1)-round(dif_median/pi)*pi;
-            else
-                y=y(:,imin);
-                c=c(:,imin);
-            end
+            % 2025-03-05, Jiaen Liu:
+            % there can be an arbitary 2*pi in the y estimation
+            n_wrap_median=median(round(n_wrap_3e_est));
+            idx_median=find(round(n_wrap_3e_est)==n_wrap_median);
+            [~,imin]=min(abs(idx_median-nr/2));
+            idx_ref=idx_median(imin);
+            % [~,imin]=min(abs(n_wrap_3e_est-round(n_wrap_3e_est)));
+            y=y(:,idx_ref)+n_wrap_median*2*pi;
+            c=c(:,idx_ref)+n_wrap_median*2*pi;
+            y=y/2;
+            c=c/2;
         else
             [y,c]=polypha1d(dpc,mask,ord,maskDel);
         end

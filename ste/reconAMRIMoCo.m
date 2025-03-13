@@ -15,7 +15,7 @@ function reconAMRIMoCo(folder,mid,fPar,steps,varargin)
     end
     % parse input variables
     p=inputParser;
-    parpool_path='~/matlab/';
+    parpool_path='/home/jiaen_liu/matlab/';
     par_overwrite=[];
     addParameter(p,'parpool_path',parpool_path,@ischar);
     addParameter(p,'par_overwrite',par_overwrite,@isstruct);

@@ -377,8 +377,9 @@ function para=extract_para(mid,siemens_only,dir)
                 n_interleaves*n_slices*(n_fvarte_cyc*n_varte_cyc);
         end
         n_main_tr = n_main_shots/n_slices;
-        n_noise_tr = wip.n_noiserep;
-        n_noise_shots = n_noise_tr;
+        % n_noise_tr should be less than 1, 2024-09-21, Jiaen Liu
+        n_noise_tr = min(wip.n_noiserep,1);
+        n_noise_shots = wip.n_noiserep;
         n_dummy_tr = wip.dummy_shots;
         n_dummy_shots = n_dummy_tr*n_slices;
         n_tr = n_noise_tr+n_dummy_tr+...

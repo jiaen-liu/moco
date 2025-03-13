@@ -32,13 +32,16 @@ function [im_recon,par,para_mr]=recon_epi_ste_beta(mid,par_script,chain,varargin
     sensit='reg';
     mot_uw=[];
     max_ord=5;
+    noise_sim=0;
     addParameter(p,'sensit',sensit,@ischar);
     addParameter(p,'mot_uw',mot_uw,@isnumeric);
     addParameter(p,'max_ord',max_ord,@isnumeric);
+    addParameter(p,'noise_sim',noise_sim,@isnumeric);
     p.parse(varargin{:});
     sensit=p.Results.sensit;
     mot_uw=p.Results.mot_uw;
     max_ord=p.Results.max_ord;
+    noise_sim=p.Results.noise_sim;
     %
     im_recon=[];
     % ----------------------------------------------- %
@@ -54,6 +57,7 @@ function [im_recon,par,para_mr]=recon_epi_ste_beta(mid,par_script,chain,varargin
     % ----------------------------------------------- %
     disp('*** Loading the pre-processed ste data ***');
     fn=rp(['mid' int2str(mid) '.steref4recon.svd']);
+    disp(fn);
     data=read_data(fn);
     if ~isfield(data,'vendor')
         vendor='siemens';
@@ -165,6 +169,7 @@ function [im_recon,par,para_mr]=recon_epi_ste_beta(mid,par_script,chain,varargin
     else
         fn_sen_1v=fullfile(subdir,['mid' int2str(mid) '.sen_ste_1v.mat']);
     end
+    fn_noise=fullfile(subdir,['mid' int2str(mid) '.noise.mat']);
 % $$$     switch sensit
 % $$$       case 'reg'
 % $$$         fn_sen_1v=fullfile(subdir,['mid' int2str(mid) '.sen_ste_1v.svd']);
@@ -1168,7 +1173,7 @@ function [im_recon,par,para_mr]=recon_epi_ste_beta(mid,par_script,chain,varargin
         disp('*** Reconstructing GRE images ***');
         %
         ncontr=length(par.icontr);
-        kd=double(read_data(fn_gre));
+        kd=read_data(fn_gre);
 
         if kd==-1
             error('*** K space data does not exist! ***');
@@ -1203,11 +1208,14 @@ function [im_recon,par,para_mr]=recon_epi_ste_beta(mid,par_script,chain,varargin
         if par.simul_noise
             % divide cov by 2 because of oversampling
             sqr_cov=chol(inv(sorted_ste.inv_cov)/2)';
-            kd=sqr_cov*randn(nch,para.nr*nk_shot*n_interl*npar_acc*...
-                                para.n_slices*ncontr*nreps);
-            kd=reshape(kd,[nch,para.nr,nk_shot,n_interl*npar_acc,...
-                           para.n_slices,ncontr,nreps]);
-            kd=permute(kd,[2,3,4,5,1,6,7]);
+            kd_noise=sqr_cov*...
+                     randn(nch,para.nr*nk_shot*n_interl*npar_acc*...
+                           para.n_slices*ncontr*nreps);
+            kd_noise=reshape(kd_noise,...
+                             [nch,para.nr,nk_shot,n_interl*npar_acc,...
+                              para.n_slices,ncontr,nreps]);
+            kd_noise=permute(kd_noise,[2,3,4,5,1,6,7]);
+            kd=kd+kd_noise;
         end
         % rearrange the k-space order to match 
         % the order defined in the clustering
@@ -1244,6 +1252,28 @@ function [im_recon,par,para_mr]=recon_epi_ste_beta(mid,par_script,chain,varargin
             pca_struct.coefsinterp=ste_info.coefsinterp;
             pca_struct.scorefilt=ste_info.scorefilt;
         end
+        if ~isfield(par,'noise_map') || par.noise_map
+            % downsample to 4 mm resolution
+            noise_ds=ones(3,1);
+            noise_ds(1)=para.nr/floor(para.nr/(4/para.resr));
+            noise_ds(2)=para.np/...
+                para.sense_rate_p/...
+                para.sense_rate_s/...
+                floor(para.np/para.sense_rate_p/para.sense_rate_s/(4/para.resp));
+            noise_ds(3)=para.n_partitions/para.sense_rate_s/...
+                floor(para.n_partitions/para.sense_rate_s/(4/para.ress));
+            if ~isfield(par,'use_ext_ref') || ...
+                    isempty(par.use_ext_ref)
+                warning('*** Noise map cannot be calculated ***');
+            else
+                mid_pimg=par.use_ext_ref(1);
+                para_pimg=getfield(sorted_ste.para_pimg,['mid' num2str(mid_pimg)]);
+                [noise,mag_noise]=noise_map_moco_recon(b1,sorted_ste.cov_mat,para,para_pimg,noise_ds,0.3);
+                noise(abs(noise)>=prctile(col(abs(noise)),99.9))=0;
+                mag_noise(abs(mag_noise)>=prctile(col(abs(mag_noise)),99.9))=0;
+                save(fn_noise,'noise','mag_noise');
+            end
+        end        
         clearvars -except para_mr para kd par ...
             ncontr nreps pca_struct;
         recon_t=zeros(ncontr,nreps);
@@ -1254,6 +1284,8 @@ function [im_recon,par,para_mr]=recon_epi_ste_beta(mid,par_script,chain,varargin
 
         nshot_rep=para.n_interleaves*para.n_partitions/para.sense_rate_s;
         nk_shot=para.nk_shot;
+
+
         for irep=1:nreps
             disp(['*** Reconstructing repetition ' ...
                   int2str(irep) ...

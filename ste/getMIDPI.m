@@ -12,7 +12,7 @@ function y=getMIDPI(mid)
     nPI=length(data.mid_pimg);
     for i=1:nPI
         p=getfield(data.para_pimg,['mid',int2str(data.mid_pimg(i))]);
-        if p.dimen==2
+        if p.dimen==2 || p.dimen==3
             y=double(data.mid_pimg(i));
             return;
         end

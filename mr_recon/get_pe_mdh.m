@@ -25,7 +25,7 @@ function kyz=get_pe_mdh(mid,para,acq_type)
     end
     n_shot_noise=0;
     if para.n_noise_shots>0
-        n_shot_noise=para.n_noise_shots*nslice;
+        n_shot_noise=para.n_noise_tr*nslice;
     end
     n_shot_blipoff=0;
     if para.n_blipoff_reps>0

@@ -1,4 +1,4 @@
-function d=pha_crct_epi(d,dblpo,ro_pol,ref_pol,ord,pc_by_echo)
+function d=pha_crct_epi(d,dblpo,ro_pol,ref_pol,ord,pc_by_echo,single_side)
     if isempty(dblpo)
         d=d;
         return;
@@ -13,6 +13,9 @@ function d=pha_crct_epi(d,dblpo,ro_pol,ref_pol,ord,pc_by_echo)
     end
     if nargin<6
         pc_by_echo=0;
+    end
+    if nargin<7
+        single_side=0;
     end
     [nr,necho,ns,nch,ntr]=size(d);
     if necho<3
@@ -48,9 +51,13 @@ function d=pha_crct_epi(d,dblpo,ro_pol,ref_pol,ord,pc_by_echo)
     else
         ref_pha=dpOddEven(dblpo,ord);
     end
-    d(:,find(ro_pol==ref_pol(1)),:,:,:)=d(:,find(ro_pol==ref_pol(1)),:,:,:)./...
-        exp(1i*ref_pha/2);
-    d(:,find(ro_pol~=ref_pol(1)),:,:,:)=d(:,find(ro_pol~=ref_pol(1)),:,:,:).*...
-        exp(1i*ref_pha/2);
-
+    if ~single_side
+        d(:,find(ro_pol==ref_pol(1)),:,:,:)=d(:,find(ro_pol==ref_pol(1)),:,:,:)./...
+            exp(1i*ref_pha/2);
+        d(:,find(ro_pol~=ref_pol(1)),:,:,:)=d(:,find(ro_pol~=ref_pol(1)),:,:,:).*...
+            exp(1i*ref_pha/2);
+    else
+        d(:,find(ro_pol==ref_pol(1)),:,:,:)=d(:,find(ro_pol==ref_pol(1)),:,:,:)./...
+            exp(1i*ref_pha);
+    end
 end

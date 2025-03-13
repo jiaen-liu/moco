@@ -7,6 +7,7 @@
 % 2022-12-20 Jiaen Liu: Philips support
 % 2023-05 Jiaen Liu: Philips sense reference support
 % 2024-08-18 Jiaen Liu: address channel mismatch between reference and main scans
+% allow no_b0_main in compiled program
 function s=prep_ste(mid,varargin)
     version = 'v1.1';
     p=inputParser;
@@ -32,7 +33,7 @@ function s=prep_ste(mid,varargin)
     addParameter(p,'nstd_pc',nstd_pc,@isnumeric);
     addParameter(p,'frac_pc',frac_pc,@isnumeric);
     addParameter(p,'no_pc',no_pc,@isnumeric);
-    addParameter(p,'no_b0_main',no_pc,@isnumeric);
+    addParameter(p,'no_b0_main',no_b0_main,@(x)isnumeric(x)||ischar(x));
     addParameter(p,'apodization',apodization,@isnumeric);
     addParameter(p,'no_save',no_save,@isnumeric);
     addParameter(p,'no_main',no_main,@isnumeric);
@@ -58,10 +59,6 @@ function s=prep_ste(mid,varargin)
     vendor=p.Results.vendor;
     sense_philips=p.Results.sense_philips;
     regr_order=p.Results.regr_order;
-    if numel(mid_pimg)>1
-        % 2024-08-18
-        error('*** Up to one refererence scan is supported! ***');
-    end
     % mid is a char in standard alone application
     if ischar(mid)
         mid=eval(mid);
@@ -69,8 +66,16 @@ function s=prep_ste(mid,varargin)
     if ischar(mid_pimg)
         mid_pimg=eval(mid_pimg);
     end
+    if numel(mid_pimg)>1
+        % 2024-08-18
+        disp(mid_pimg);
+        error('*** Up to one refererence scan is supported! ***');
+    end
     if ischar(mid_blpo)
         mid_blpo=eval(mid_blpo);
+    end
+    if ischar(no_b0_main)
+        no_b0_main=eval(no_b0_main);
     end
     n = length(mid);
     cd(data_path);
@@ -292,8 +297,8 @@ function s=prep_ste(mid,varargin)
         % remove noise scan
         if strcmp(vendor,'siemens')
             if para.n_noise_shots>0
-                d=d(:,:,:,:,para.n_noise_shots+1:end);
-                nshot=nshot-para.n_noise_shots;
+                d=d(:,:,:,:,para.n_noise_tr+1:end);
+                nshot=nshot-para.n_noise_tr;
             end
             % remove blipoff scans
             if para.n_blipoff_reps>0
@@ -359,7 +364,7 @@ function s=prep_ste(mid,varargin)
                 for i=1:nshot
                     for j=1:necho_main
                         mdhtmp=cast2struct(dmdh(:,1,nnav+necho_ste+j,...
-                                                i+n_shot_blipoff+para.n_noise_shots),...
+                                                i+n_shot_blipoff+para.n_noise_tr),...
                                            mdh);
                         kyz(1,j,i)=mdhtmp.ky;
                         kyz(2,j,i)=mdhtmp.kz;
@@ -510,7 +515,7 @@ function s=prep_ste(mid,varargin)
                     kmain=kmain./exp(1i*dp);
                 end
             end
-            save_data(fn_main,kmain);
+            save_data(fn_main,single(kmain));
             file_permission(fn_main,'+rw','ugo');
         end
 

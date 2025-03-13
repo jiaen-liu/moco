@@ -430,14 +430,14 @@ function y=recon_mb_epi_cg_beta(x,para,retflag)
     freemem=memory_linux();
     mem_need=0;
     if isa(x,'double')
-        mem_need=nr*np*ns*kos(1)*kos(2)*kos(3)*16/1024^3;
+        mem_need=nr*np*ns*(kos(1)*kos(2)*kos(3)+1)*16/1024^3;
     else
-        mem_need=nr*np*ns*kos(1)*kos(2)*kos(3)*8/1024^3;
+        mem_need=nr*np*ns*(kos(1)*kos(2)*kos(3)+1)*8/1024^3;
     end
 % $$$     size_para=whos('para');
 % $$$     size_para=size_para.bytes/1024^3;
 % $$$     max_nch_seg_mem=floor((freemem-size_para)*0.6/mem_need);
-    max_nch_seg_mem=floor(freemem*0.8/4/mem_need);
+    max_nch_seg_mem=floor(freemem*0.7/mem_need);
     
     if ~isfield(para,'max_nch_seg')
         max_nch_seg=nch;
@@ -506,26 +506,7 @@ function y=recon_mb_epi_cg_beta(x,para,retflag)
             end
         end
         
-        if isfield(para,'intp_ker_ext') && ~isempty(para.intp_ker_ext)
-            % interplate B1
-            b1n=sparse_csr_mm_prit(para.intp_ker_ext.val,...
-                                   para.intp_ker_ext.col_ind,...
-                                   para.intp_ker_ext.row_ptr,...
-                                   n,...
-                                   nori_b1,...
-                                   para.b1n(:,:,im));
-            b1n=reshape(b1n,[nch,nr,np,ns]);
-        elseif isfield(para,'intp_ker_ste') && ~isempty(para.intp_ker_ste)
-            b1n=sparse_csr_mm_prit(para.intp_ker_ste.val,...
-                                   para.intp_ker_ste.col_ind,...
-                                   para.intp_ker_ste.row_ptr,...
-                                   n,...
-                                   nori_b1,...
-                                   para.b1n(:,:,im));
-            b1n=reshape(b1n,[nch,nr,np,ns]);
-        else
-            b1n=reshape(para.b1n(:,:,im),[nch,nr,np,ns]);
-        end
+
         if retflag==1
             x_sn=x.*sn;
             if pcaflag~=1
@@ -538,13 +519,32 @@ function y=recon_mb_epi_cg_beta(x,para,retflag)
             idx_ch=idx_ch_seg(1,ich_seg):idx_ch_seg(2,ich_seg);
             n_ch_seg_cur=numel(idx_ch);
             n_ch_seg_cur=length(idx_ch);
-            
+            if isfield(para,'intp_ker_ext') && ~isempty(para.intp_ker_ext)
+                % interplate B1
+                b1n=sparse_csr_mm_prit(para.intp_ker_ext.val,...
+                                       para.intp_ker_ext.col_ind,...
+                                       para.intp_ker_ext.row_ptr,...
+                                       n,...
+                                       nori_b1,...
+                                       para.b1n(idx_ch,:,im));
+                b1n=reshape(b1n,[n_ch_seg_cur,nr,np,ns]);
+            elseif isfield(para,'intp_ker_ste') && ~isempty(para.intp_ker_ste)
+                b1n=sparse_csr_mm_prit(para.intp_ker_ste.val,...
+                                       para.intp_ker_ste.col_ind,...
+                                       para.intp_ker_ste.row_ptr,...
+                                       n,...
+                                       nori_b1,...
+                                       para.b1n(idx_ch,:,im));
+                b1n=reshape(b1n,[n_ch_seg_cur,nr,np,ns]);
+            else
+                b1n=reshape(para.b1n(:,:,im),[nch,nr,np,ns]);
+            end            
             if retflag==1
                 if pcaflag
                     kd_fwd=0;
                     % A*x for pca
                     for mode=1:npca
-                        kd_fwd_mode=b1n(idx_ch,:,:,:).*(scores(mode,:,:,:).*x_sn);
+                        kd_fwd_mode=b1n.*(scores(mode,:,:,:).*x_sn);
                         kd_fwd_mode=fft(kd_fwd_mode,[nr]*kos(1),2);
                         kd_fwd_mode=fft(kd_fwd_mode,[np]*kos(2),3);
                         if para.dimen == 3
@@ -570,7 +570,7 @@ function y=recon_mb_epi_cg_beta(x,para,retflag)
                     end
                 else
                     % A*x for non-pca 
-                    kd_fwd=b1n(idx_ch,:,:,:).*(b0_x_sn);
+                    kd_fwd=b1n.*(b0_x_sn);
                     kd_fwd=fft(kd_fwd,[nr]*kos(1),2);
                     kd_fwd=fft(kd_fwd,[np]*kos(2),3);
                     if para.dimen == 3
@@ -629,11 +629,11 @@ function y=recon_mb_epi_cg_beta(x,para,retflag)
                     end
                     if pcaflag
                         xm=xm+...
-                           sum(kd.*conj(b1n(idx_ch,:,:,:)),1).*...
+                           sum(kd.*conj(b1n),1).*...
                            conj(scores(mode,:,:,:));
                     else
                         xm=xm+...
-                           sum(kd.*conj(b1n(idx_ch,:,:,:)),1).*...
+                           sum(kd.*conj(b1n),1).*...
                            conj(b0);
                     end
                 end % loop over pca

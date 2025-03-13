@@ -1,11 +1,10 @@
-function y=fov_crct(data,k,para)
+function data=fov_crct(data,k,para)
     if nargin<4
         is=1;
     end
     sign_ph = -1.0;
     sign_sl = -1.0;
     [nx,n_echo_shot,ns,nch,ntr]=size(data);
-    y=zeros(size(data));
     % [npe,n_echo_k,ntrk]=size(k);
     npe=size(k,1);
     k=reshape(k,[npe,n_echo_shot,ns,1,ntr]);
@@ -28,7 +27,7 @@ function y=fov_crct(data,k,para)
                   coor_new(:, 3);
         dels = s_shift/(para.sthickness*...
                         (1+para.sl_oversamp));
-        y(:,:,is,:,:)=data(:,:,is,:,:).*...
+        data(:,:,is,:,:)=data(:,:,is,:,:).*...
             exp(sign_ph*2*pi*1i*delp*k(1,:,is,:,:)).*...
             exp(sign_sl*2*pi*1i*dels*k(2,:,is,:,:));
     end

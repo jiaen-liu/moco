@@ -5,7 +5,7 @@
 %        Now calling sort_siemens with the -filemode 0666 option to allow all to
 %        read and overwrite.
 
-function [y,para]=recon_amri_epi(mid,varargin)
+function [y,para,cov_mat]=recon_amri_epi(mid,varargin)
 % check if the data is available
     fd=get_file_filter('.',['MID*',num2str(mid),'.raw.svd']);
     if isempty(fd)
@@ -193,7 +193,9 @@ function [y,para]=recon_amri_epi(mid,varargin)
         disp('*** Striping reference echo information ***');
         dx(:,idx_ref,:,:,:,:,:)=[];
         ro_pol(idx_ref)=[];
-        ro_pol_blpo(idx_ref)=[];
+        if exist('ro_pol_blpo','var')
+            ro_pol_blpo(idx_ref)=[];
+        end
         te(idx_ref)=[];
         k(:,idx_ref,:)=[];
         disp('*** Take the average across partitions for ref data. This may not always work correctly! ***')

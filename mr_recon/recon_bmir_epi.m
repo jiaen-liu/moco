@@ -8,6 +8,7 @@ function [y,para,l,cov_mat]=recon_bmir_epi(mid,varargin)
     ord_pha_crct=2;
 % $$$     mid_b1=[];
     mix=0;
+    b0_crct=0;
     addParameter(p,'apodiz',apodiz,@isnumeric);
     addParameter(p,'k_return',k_return,@isnumeric);
 % $$$     addParameter(p,'no_comb',no_comb,@isnumeric);
@@ -15,6 +16,7 @@ function [y,para,l,cov_mat]=recon_bmir_epi(mid,varargin)
     addParameter(p,'no_fov_crct',no_fov_crct,@isnumeric);
     addParameter(p,'ord_pha_crct',ord_pha_crct,@isnumeric);
     addParameter(p,'mix',mix,@isnumeric);
+    addParameter(p,'b0_crct',b0_crct,@isnumeric);
 % $$$     addParameter(p,'mid_b1',mid_b1,@isnumeric);
     p.parse(varargin{:});
     apodiz=p.Results.apodiz;
@@ -24,6 +26,7 @@ function [y,para,l,cov_mat]=recon_bmir_epi(mid,varargin)
     no_fov_crct=p.Results.no_fov_crct;
     ord_pha_crct=p.Results.ord_pha_crct;
     mix=p.Results.mix;
+    b0_crct=p.Results.b0_crct;
 % $$$     mid_b1=p.Results.mid_b1;
     if k_return
         no_comb=1;
@@ -108,7 +111,8 @@ function [y,para,l,cov_mat]=recon_bmir_epi(mid,varargin)
     clear dxcp;
     % nr x n_tot_line_shot x ns x nch x nshot
     dx=permute(dx,[1,3,4,2,5]);
-    if ~para.isgre && abs(para.frequency/42.58e6-7)<0.5
+    if ~para.isgre && abs(para.frequency/42.58e6-7)<0.5 && ...
+            (~isfield(para,'release_version') || para.release_version<2.4)
         dx=reshape(dx,[nr,nk_shot,necho,ns,nch,n_tr]);
         dx(:,2:2:end,:,:,:,:)=...
             -dx(:,2:2:end,:,:,:,:);
@@ -128,7 +132,6 @@ function [y,para,l,cov_mat]=recon_bmir_epi(mid,varargin)
             idx=[1:nch].';
         end
         dblpo=get_phc_philips(mid);
-
         for i=1:size(idx,2)
             for ie=1:necho
                 dx_contr=dx(:,(ie-1)*nk_shot+1:ie*nk_shot,:,idx(:,i),:);
@@ -139,6 +142,26 @@ function [y,para,l,cov_mat]=recon_bmir_epi(mid,varargin)
                                       ord_pha_crct,1);
                 dx(:,(ie-1)*nk_shot+1:ie*nk_shot,:,idx(:,i),:)=dx_contr;
             end
+        end
+    elseif ~no_pc && necho>=3 && ~para.b_epi_positive
+        % 03052025, Jiaen Liu: GRE phase correction
+        % useful for sensitivity estimation
+        if abs(para.frequency/42.58e6-7)<0.5
+            idx=[1:8:nch]+[0:3].';
+            idx1=idx(:);
+            idx=[5:8:nch]+[0:3].';
+            idx2=idx(:);
+            idx=[idx1,idx2];
+        else
+            idx=[1:nch].';
+        end
+        for i=1:size(idx,2)
+            dx_ref=mean(mean(dx(:,:,:,idx(:,i),:),3),5);
+            dx_ref=reshape(dx_ref,[nr,n_tot_line_shot,...
+                                   numel(idx(:,i))]);
+            ref_pha=dpOddEven(dx_ref,2);
+            dx(:,1:2:end,:,idx(:,i),:)=dx(:,1:2:end,:,idx(:,i),:)./exp(1i*ref_pha/2);
+            dx(:,2:2:end,:,idx(:,i),:)=dx(:,2:2:end,:,idx(:,i),:).*exp(1i*ref_pha/2);
         end
     end
     % correct fov in readout direction
@@ -157,6 +180,18 @@ function [y,para,l,cov_mat]=recon_bmir_epi(mid,varargin)
             dx=fftmr(dx,1,1).*exp(-1i*lin_pha_ro);
             dx=fftmr(dx,-1,1);
         end
+    end
+    if b0_crct
+        if ~para.isgre
+            error('*** Non-GRE data not supported yet! ***');
+        end
+        if ~para.nav1d_enable
+            error('*** No 1d navigator was acquired ***');
+        end
+        [~,~,~,~,df0,~,~]=get_philips_phnav(mid);
+        dx=fftmr(dx,1,1);
+        % when done, dx is in image space
+        dx=b0_crct_bmir_epi(dx,df0,para);
     end
     % return k-space data for later processing
     if k_return

@@ -32,8 +32,11 @@ function ph=get_phc_philips(mid)
     % nr x nline x nch x tfe_factor x ndelays x ns x rep
     ph=permute(ph,[1,3,2,5,6,4,7]);
     ph=reshape(ph,[nr,n_tot_line_shot,nch,tfe_factor*n_delays*ns*nrep_ph]);
-    if ~para.isgre && abs(para.frequency/42.58e6-7)<0.5
+    if ~para.isgre && abs(para.frequency/42.58e6-7)<0.5 && ...
+            (~isfield(para,'release_version') || para.release_version<2.4)
         ph(:,2:2:end,:,:)=...
             -ph(:,2:2:end,:,:);
     end
+    % only use the last average
+    ph=ph(:,:,:,tfe_factor*n_delays*ns*(nrep_ph-1)+1:end);
 end

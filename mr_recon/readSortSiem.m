@@ -51,7 +51,7 @@ function y=readSortSiem(mid,varargin)
         % each acqusition type
         % Dummy shots are removed by sort_siemens
         % 'idxTRDummy','n_dummy_tr' is not needed after noise
-        strAcq={'idxTRNoise','n_noise_shots';...
+        strAcq={'idxTRNoise','n_noise_tr';...
                 'idxTRBlipoff','n_blipoff_tr';...
                 'idxTRnCycVte','n_nvarte_tr';...
                 'idxTRMain','n_main_tr'};
@@ -73,8 +73,19 @@ function y=readSortSiem(mid,varargin)
         if keyNoise
             y=read_data(fn,'partial',[5,idxTRNoise]);
             % for noise scan
-            % data in the third dimention 
+            % data in the third dimention (slice)
             % contains zeros
+            
+            % find in sort_siemens.c: 
+% $$$             /* Read in data for one volume at the time, cp to buffer while filtering out all channel and mdh hdr's */
+% $$$     /* Data size for noise is smaller than one volume */ 
+% $$$     
+% $$$     /* HACK for noise: only first nslice shots used if noise> slice. Only rep=0 has noise data */
+% $$$     /* hdr->noise = number of shots, in this code we would need number of reps, therefore hdr->noise has been replaced by 1 */
+% $$$     /* Only for calculating size of noise part and position after noise is hdr->noise actually used */
+% $$$     /* Should be cleaned up to pass all noise data to be used in recon, needs adjustments in recon too */
+% $$$     /*  */
+% $$$             /* Returned noise data (and associated mdh part) is padded to make one vol of noise, even is noise < nslice, so that noise always makes up one whole rep */
             nn=size(y,3);
             idx=zeros(nn,1);
             for ii=1:nn
