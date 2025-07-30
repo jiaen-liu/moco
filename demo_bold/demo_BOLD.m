@@ -1,10 +1,12 @@
+%%% This is a demo showing how to reconstruct BOLD fMRI data. 
+close all; clc; clearvars;
 
 %% Specify the paths for the working and data directories
-workDir='~/myProjects/moco/';
+workDir= fullfile('..','..','moco'); %'~/myProjects/moco/';
 % workDir='~/Documents/moco-recon/';
 addpath(genpath(workDir));
 
-dataDir='~/myData/moco-data/';
+dataDir= fullfile('.','data'); %'~/myData/moco-data/';
 cd(dataDir);
 
 % Specify the measurement number
@@ -42,8 +44,8 @@ switch whichReconPar
     error('WRONG recon configuration input!');
 end
 
-reconConf = [reconPar,'_',magnet,'_',orient];
-recon_conf_file = [workDir,'recon_conf/',reconConf,'.conf'];
+reconConf = [reconPar,'_',magnet,'_',orient,'.conf'];
+recon_conf_file = fullfile(workDir,'recon_con',reconConf);
 
 
 mid2 = mid_ref;
