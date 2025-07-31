@@ -46,6 +46,12 @@ Second, run the reconstruction function:
 - `path_to_data`: Path to the raw data directory.
 - `recon_conf_file`: Path to the reconstruction configuration file, which includes relevant parameters. You can find it under the subfolder "recon_conf" in this repository.
 
-## Demo script
-For a quick demostration, download the 2 mm low-resolution 3D BOLD EPI dataset with 10 frames from the link above. Place the data under the `../moco-data/` directory, then run the `demo_BOLD.m` script in the directory.
+## Demonstrations
+### BOLD fMRI 
+We have demonstrated the utility of this motion robust method for resting state BOLD functional MRI (fMRI) at 10.5 T and reported our findings in the following paper: 
+
+Advancing whole-brain BOLD fMRI in humans at 10.5 Tesla with motion-robust 3D EPI, parallel transmission and high-density RF receive coils. Shuxian Qu, Jiaen Liu, Peter van Gelderen, Jacco A. de Zwart, Jeff H. Duyn, Matt Waks, Russell Lagore, Alexander Bratch, Andrea Grant, Edward Auerbach, Lance Delabarre, Alireza Sadeghi-Tarakameh, Yigitcan Eryaman, Gregor Adriany, Kamil Ugurbil, and Xiaoping Wu. MRM 2025.
+
+To grab an idea of how the recon works in this fMRI application, you may run the demo script, `demo_BOLD.m`, under the subfolder "demo_bold". 
+For this quick demonstration, you will need to download the low resolution example fMRI data (2 mm isotropic, 10 volumes) from the subfolder "bold-data" shared at [this google drive](https://drive.google.com/drive/folders/1cVI2BXiPV-lKmIz1KD7RiYVmy8S9kSTL?usp=drive_link). Note that the demo script assumes that the example fMRI data are stored under the subfolder "demo_bold/data".
 
