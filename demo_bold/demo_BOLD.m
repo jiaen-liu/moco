@@ -2,11 +2,11 @@
 close all; clc; clearvars;
 
 %% Specify the paths for the working and data directories
-workDir= fullfile('..','..','moco'); %'~/myProjects/moco/';
+workDir= '~/data-sharing/moco'; %'~/myProjects/moco/';
 % workDir='~/Documents/moco-recon/';
 addpath(genpath(workDir));
 
-dataDir= fullfile('.','data'); %'~/myData/moco-data/';
+dataDir= '~/data-sharing/moco/demo_bold/data/'; %'~/myData/moco-data/';
 cd(dataDir);
 
 % Specify the measurement number
@@ -45,7 +45,7 @@ switch whichReconPar
 end
 
 reconConf = [reconPar,'_',magnet,'_',orient,'.conf'];
-recon_conf_file = fullfile(workDir,'recon_con',reconConf);
+recon_conf_file = fullfile(workDir,'recon_conf',reconConf);
 
 
 mid2 = mid_ref;
