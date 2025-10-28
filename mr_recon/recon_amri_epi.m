@@ -4,16 +4,37 @@
 %    2022-10-04 JAdZ
 %        Now calling sort_siemens with the -filemode 0666 option to allow all to
 %        read and overwrite.
+%    2025-07-17 JAdZ
+%        Support for newer sort_siemens output with .raw0.svd and .raw1.svd files
 
 function [y,para,cov_mat]=recon_amri_epi(mid,varargin)
 % check if the data is available
     fd=get_file_filter('.',['MID*',num2str(mid),'.raw.svd']);
+    if isempty(fd)
+    	para=extract_para(mid);
+		dname=['./meas_MID',num2str(mid,'%05d'),'_recon/'];
+		if exist(dname)
+			if ((para.ste_acq_indx == 0) && (para.short_te_ref == 1))
+				fd=get_file_filter(dname,['MID*',num2str(mid),'.raw',num2str(para.ste_acq_indx+1),'.svd']);
+			else
+				fd=get_file_filter(dname,['MID*',num2str(mid),'.raw0.svd']);
+			end
+		end
+	end
     if isempty(fd)
         cmd=['sort_siemens -filemode 0666 ' num2str(mid)];
         if system(cmd)~=0
             error(['*** ',cmd,' was not successful! ***']);
         end
         pause(5);
+		dname=['./meas_MID',num2str(mid,'%05d'),'_recon/'];
+		if exist(dname)
+			if ((para.ste_acq_indx == 0) && (para.short_te_ref == 1))
+				fd=get_file_filter(dname,['MID*',num2str(mid),'.raw',num2str(para.ste_acq_indx+1),'.svd']);
+			else
+				fd=get_file_filter(dname,['MID*',num2str(mid),'.raw0.svd']);
+			end
+		end
     end
     p=inputParser;
     k_return=0;
@@ -197,7 +218,10 @@ function [y,para,cov_mat]=recon_amri_epi(mid,varargin)
             ro_pol_blpo(idx_ref)=[];
         end
         te(idx_ref)=[];
-        k(:,idx_ref,:)=[];
+        k=reshape(k,sik);
+        k(:,idx_ref,:,:,:)=[];
+        sik=size(k);
+        reshape(k,[sik(1),sik(2)*sik(3),numel(k)/sik(1)/sik(2)/sik(3)]);
         disp('*** Take the average across partitions for ref data. This may not always work correctly! ***')
         ref=mean(ref,5);
     else

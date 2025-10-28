@@ -24,7 +24,7 @@ function isen=ste_isen(freq_fluct,sorted_ste,par)
     % this may change for non-standard cartesian trajectories
     %%----------------%%
 
-    if isfield(sorted_ste,'kyz')
+    if isfield(sorted_ste,'kyz') && ~isempty(sorted_ste.kyz)
         ky=sorted_ste.kyz(1,1:sorted_ste.para.nk_shot,:);
         kz=sorted_ste.kyz(2,1:sorted_ste.para.nk_shot,:);
     elseif sorted_ste.para.isgre
@@ -35,6 +35,8 @@ function isen=ste_isen(freq_fluct,sorted_ste,par)
         ky=[0:s1:np-1].'-floor(np/2);
         kz=[0:s2:n_partitions-1].'-floor(n_partitions/2);
         [ky,kz]=ndgrid(ky,kz);
+        ky=reshape(ky,[1,1,numel(ky)]);
+        kz=reshape(kz,[1,1,numel(kz)]);
         if sorted_ste.para.dkz_caipi~=0
             error('*** CAIPI is not supported in old data format! ***');
         end

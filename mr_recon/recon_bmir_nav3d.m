@@ -30,7 +30,7 @@ function [dnav,pe,im_nav]=recon_bmir_nav3d(mid,varargin)
     py=zeros(n_shot_fast_nav3d*nechonav,r);
     pz=zeros(n_shot_fast_nav3d*nechonav,r);
     for i=1:r
-        pe=gen_pe_sense(npnav,nsnav,s1nav,s2nav,1,dy(mod(i-1,s1nav)+1),dz(floor((i-1)/s1nav)+1));
+        pe=gen_pe_sense_ste(npnav,nsnav,s1nav,s2nav,1,dy(mod(i-1,s1nav)+1),dz(floor((i-1)/s1nav)+1));
         py(nechonav+1:end,i)=pe(1,:);
         pz(nechonav+1:end,i)=pe(2,:);
     end

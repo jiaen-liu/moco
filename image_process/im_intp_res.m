@@ -45,7 +45,15 @@ function y=im_intp_res(im,ratio_res,varargin)
     cn=cat(4,Xn,Yn,Zn);
 
     y=zeros(nxn,nyn,nzn,nv);
+    if ~isreal(im)
+        y=complex(y);
+    end
     for i=1:nv
-        y(:,:,:,i)=interp3_nmat(co,cn,reshape(double(im(:,:,:,i)),[nx,ny,nz]),method);
+        if isreal(im)
+            y(:,:,:,i)=interp3_nmat(co,cn,reshape(double(im(:,:,:,i)),[nx,ny,nz]),method);
+        else
+            y(:,:,:,i)=interp3_nmat(co,cn,reshape(double(real(im(:,:,:,i))),[nx,ny,nz]),method)+1i*...
+                interp3_nmat(co,cn,reshape(double(imag(im(:,:,:,i))),[nx,ny,nz]),method);
+        end
     end
 end

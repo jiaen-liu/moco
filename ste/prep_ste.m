@@ -2,12 +2,15 @@
 % v1.1: add apodization on 08/19/2019
 % Translated from IDL to Matlab on 09/25/2020
 %
-% 2022-09-29 PvG & JAdZ: Added -filemode 0666 to sort_siemens call to allow all to overwrite files
+% 2022-09-29 PvG & JAdZ: Added -filemode 0666 to sort_siemens call to allow all to
+%                        overwrite files
 % 2022-10-05 Jiaen Liu: Fix linear phase issue in recon
 % 2022-12-20 Jiaen Liu: Philips support
 % 2023-05 Jiaen Liu: Philips sense reference support
 % 2024-08-18 Jiaen Liu: address channel mismatch between reference and main scans
-% allow no_b0_main in compiled program
+%                       allow no_b0_main in compiled program
+% 2025-07-18 JAdZ: Add support for new sort_siemens, which produces .raw0 and .raw1
+%                  instead of .nav and .raw.
 function s=prep_ste(mid,varargin)
     version = 'v1.1';
     p=inputParser;
@@ -86,21 +89,34 @@ function s=prep_ste(mid,varargin)
             disp(['*** MID:', num2str(mid(imid)), ' ***']);
             disp('*** Processing navigator data ***');
             para=extract_para(mid(imid));
+	    dname='./';
             fname=get_file_filter('.',['MID*',num2str(mid(imid)),'.nav.svd']); % used to be steref, PvG 21Sep22
             if isempty(fname)
-                fname=get_file_filter('.',['MID*',num2str(mid(imid)),'.steref.svd']); % legacy support for older data
+	        % 2025-07-18 JAdZ: Support for newer send_siemens, look for .raw0.svd, when that exists
+	        dname=['./meas_MID',num2str(mid(imid),'%05d'),'_recon/'];
+	        if exist(dname)
+	            fname=get_file_filter(dname,['MID*',num2str(mid(imid)),'.raw',num2str(para.ste_acq_indx),'.svd']);
+	        end
+	        % finally test for really old data
                 if isempty(fname)
-                    cmd=['sort_siemens -filemode 0666 ' num2str(mid(imid))];
-                    if system(cmd)~=0
-                        error(['*** ',cmd,' was not successful! ***']);
-                    end
-                    fname=get_file_filter('.',['MID*',num2str(mid(imid)),'.nav.svd']); % new sort_siemens output
+		    fname=get_file_filter('.',['MID*',num2str(mid(imid)),'.steref.svd']); % legacy support for older data
                     if isempty(fname)
-                        fname=get_file_filter('.',['MID*',num2str(mid(imid)),'.steref.svd']); % legacy support for older data
-                    end
+                        cmd=['sort_siemens -filemode 0666 ' num2str(mid(imid))];
+                        if system(cmd)~=0
+                            error(['*** ',cmd,' was not successful! ***']);
+                        end
+		        if exist(dname)
+              		    fname=get_file_filter(dname,['MID*',num2str(mid(imid)),'.raw',num2str(para.ste_acq_indx),'.svd']);
+		        end
+             	        if isempty(fname)
+			    error(['*** ',fname,' still does not exist! ***']);
+                        end
+		    else
+		        dname='./';
+		    end
                 end
             end
-            fnmdh=get_file_filter('.',['MID*',num2str(mid(imid)),'.mdh']);
+            fnmdh=get_file_filter(dname,['MID*',num2str(mid(imid)),'.mdh']);
         end
         if strcmp(vendor,'siemens')
             d=read_data(fname);

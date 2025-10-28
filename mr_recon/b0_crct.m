@@ -1,4 +1,4 @@
-function d=b0_crct(d,nav,ste,te,para)
+function [d,freq]=b0_crct(d,nav,ste,te,para)
     use_ste=0;
     if isempty(nav) & ~isempty(ste)
         use_ste=1;

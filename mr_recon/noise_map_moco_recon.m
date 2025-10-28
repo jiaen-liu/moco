@@ -24,7 +24,7 @@ function [noise,mag_noise]=noise_map_moco_recon(b1,cov_mat,para,para_b1,downsamp
     dz=para.dkz_caipi;
     
     coord=get_coordinate(para,1,0,0);
-    coord_b1=get_coordinate(para_b1,0,0,0);
+    coord_b1=get_coordinate(para_b1,1,0,0);
     
     [nx,ny,nz,nch]=size(b1);
     b1=reshape(b1,[nx*ny*nz,nch]);

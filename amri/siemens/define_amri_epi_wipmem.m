@@ -216,6 +216,206 @@ function wipmem=define_amri_epi_wipmem()
 %         This version was automatically updated by bash script
 %         generate_amri_epi_wipmem_update.sh on 2022-06-23 04:00:08, based
 %         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2022/08/31, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2022-08-31 04:00:07, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2022/09/03, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2022-09-03 04:00:09, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2022/09/07, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2022-09-07 17:24:57, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2022/09/21, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2022-09-21 04:00:07, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2022/11/11, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2022-11-11 04:00:08, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2022/12/01, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2022-12-01 07:48:51, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2023/01/04, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2023-01-04 08:51:01, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2023/01/10, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2023-01-10 08:16:02, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2023/01/12, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2023-01-12 04:00:07, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2023/01/14, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2023-01-14 04:00:07, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2023/01/24, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2023-01-24 04:00:08, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2023/02/02, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2023-02-02 04:00:08, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2023/02/08, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2023-02-08 04:00:07, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2023/02/10, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2023-02-10 18:14:45, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2023/02/23, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2023-02-23 04:00:07, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2023/03/03, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2023-03-03 04:00:06, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2023/03/07, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2023-03-07 04:00:06, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2023/03/15, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2023-03-15 04:00:09, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2023/03/24, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2023-03-24 17:18:40, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2023/06/14, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2023-06-14 04:00:06, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2023/09/14, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2023-09-14 04:00:05, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2023/09/29, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2023-09-29 04:00:05, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2023/11/14, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2023-11-14 04:00:04, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2023/11/22, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2023-11-22 15:41:22, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2023/12/02, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2023-12-02 04:00:04, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2023/12/09, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2023-12-09 04:00:05, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2024/01/27, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2024-01-27 04:00:06, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2024/03/22, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2024-03-22 04:00:08, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2024/05/15, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2024-05-15 04:00:04, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2024/08/22, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2024-08-22 04:00:07, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2024/08/23, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2024-08-23 04:00:06, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2024/09/11, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2024-09-11 04:00:06, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2024/09/12, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2024-09-12 04:00:06, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2024/10/16, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2024-10-16 16:34:17, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2024/10/31, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2024-10-31 04:00:06, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2025/01/29, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2025-01-29 04:00:07, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2025/02/05, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2025-02-05 04:00:06, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2025/02/27, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2025-02-27 04:00:05, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2025/04/02, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2025-04-02 04:00:06, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2025/04/10, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2025-04-10 04:00:06, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2025/04/29, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2025-04-29 04:00:06, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2025/05/08, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2025-05-08 04:00:07, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2025/05/08, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2025-05-08 09:59:03, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2025/05/08, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2025-05-08 10:00:03, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2025/05/20, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2025-05-20 04:00:07, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2025/05/24, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2025-05-24 04:00:06, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2025/06/13, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2025-06-13 04:00:10, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2025/06/14, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2025-06-14 04:00:06, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2025/06/19, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2025-06-19 04:00:07, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2025/07/12, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2025-07-12 04:00:06, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
 %-
 
 % The structure that describes tFree - convert 't' to true/1, 'f' to false/0
@@ -256,7 +456,7 @@ wipmem_b=setfield(wipmem_b,'ir_bunch_slices',uint8(0));
 wipmem_b=setfield(wipmem_b,'ir_auto_ti',uint8(0));
 wipmem_b=setfield(wipmem_b,'fixed_ir_max_ti',uint8(0));
 wipmem_b=setfield(wipmem_b,'fixed_ir_crush',uint8(0));
-wipmem_b=setfield(wipmem_b,'linked_bandwidth',uint8(0));
+wipmem_b=setfield(wipmem_b,'unlinked_bandwidth',uint8(0));
 wipmem_b=setfield(wipmem_b,'fixed_nav_bandwidth',uint8(0));
 wipmem_b=setfield(wipmem_b,'anonymize_raw_data',uint8(0));
 wipmem_b=setfield(wipmem_b,'var_te_cyclic',uint8(0));
@@ -320,7 +520,7 @@ wipmem_b=setfield(wipmem_b,'adj_ro_gres',uint8(0));
 wipmem_b=setfield(wipmem_b,'diff_fc',uint8(0));
 wipmem_b=setfield(wipmem_b,'diff_rt_fixed',uint8(0));
 wipmem_b=setfield(wipmem_b,'experimental',uint8(0));
-wipmem_b=setfield(wipmem_b,'refocus_duration_linked',uint8(0));
+wipmem_b=setfield(wipmem_b,'refocus_duration_unlinked',uint8(0));
 wipmem_b=setfield(wipmem_b,'refocus_r_crusher_off',uint8(0));
 wipmem_b=setfield(wipmem_b,'refocus_p_crusher_off',uint8(0));
 wipmem_b=setfield(wipmem_b,'refocus_s_crusher_off',uint8(0));
@@ -328,6 +528,42 @@ wipmem_b=setfield(wipmem_b,'caipi',uint8(0));
 wipmem_b=setfield(wipmem_b,'stable_binary',uint8(0));
 wipmem_b=setfield(wipmem_b,'reset_error',uint8(0));
 wipmem_b=setfield(wipmem_b,'alt_invmt',uint8(0));
+wipmem_b=setfield(wipmem_b,'cycle_se_depcrh',uint8(0));
+wipmem_b=setfield(wipmem_b,'afi',uint8(0));
+wipmem_b=setfield(wipmem_b,'grad_max_amp_fixed',uint8(0));
+wipmem_b=setfield(wipmem_b,'pme_se',uint8(0));
+wipmem_b=setfield(wipmem_b,'pme_ste',uint8(0));
+wipmem_b=setfield(wipmem_b,'jitter_moment_fixed',uint8(0));
+wipmem_b=setfield(wipmem_b,'fixed_scramble_angle',uint8(0));
+wipmem_b=setfield(wipmem_b,'pme_dif',uint8(0));
+wipmem_b=setfield(wipmem_b,'fixed_slice_tr',uint8(0));
+wipmem_b=setfield(wipmem_b,'alt_slice_order',uint8(0));
+wipmem_b=setfield(wipmem_b,'flair',uint8(0));
+wipmem_b=setfield(wipmem_b,'cycle_grsl_both',uint8(0));
+wipmem_b=setfield(wipmem_b,'spin_echo_jitter',uint8(0));
+wipmem_b=setfield(wipmem_b,'spin_echo_flip',uint8(0));
+wipmem_b=setfield(wipmem_b,'refocus_bwt_unlinked',uint8(0));
+wipmem_b=setfield(wipmem_b,'allow_popup',uint8(0));
+wipmem_b=setfield(wipmem_b,'sms_order',uint8(0));
+wipmem_b=setfield(wipmem_b,'is_recon_reference',uint8(0));
+wipmem_b=setfield(wipmem_b,'bin_verify',uint8(0));
+wipmem_b=setfield(wipmem_b,'fire_recon',uint8(0));
+wipmem_b=setfield(wipmem_b,'grad_mom_fixed',uint8(0));
+wipmem_b=setfield(wipmem_b,'grad_bval_fixed',uint8(0));
+wipmem_b=setfield(wipmem_b,'grad_flow_fixed',uint8(0));
+wipmem_b=setfield(wipmem_b,'fixed_diff_delta',uint8(0));
+wipmem_b=setfield(wipmem_b,'diff_se',uint8(0));
+wipmem_b=setfield(wipmem_b,'fixed_se_crushers',uint8(0));
+wipmem_b=setfield(wipmem_b,'interactive_realtime',uint8(0));
+wipmem_b=setfield(wipmem_b,'fixed_interactive_rt',uint8(0));
+wipmem_b=setfield(wipmem_b,'fixed_nav_slewrate',uint8(0));
+wipmem_b=setfield(wipmem_b,'invert_grsl',uint8(0));
+wipmem_b=setfield(wipmem_b,'dif_alt',uint8(0));
+wipmem_b=setfield(wipmem_b,'prevent_popup',uint8(0));
+wipmem_b=setfield(wipmem_b,'diff_angle_ack',uint8(0));
+wipmem_b=setfield(wipmem_b,'mprage_type',uint8(0));
+wipmem_b=setfield(wipmem_b,'ste_bw_set',uint8(0));
+wipmem_b=setfield(wipmem_b,'fixed_mprage_shots',uint8(0));
 
 % The structure that describes dFree
 wipmem_d=struct('seq_version',double(0));
@@ -448,7 +684,7 @@ wipmem_l=setfield(wipmem_l,'flow_sel_ro_100ums',zeros(1,1,'int16'));
 wipmem_l=setfield(wipmem_l,'flow_ramptime',zeros(1,1,'int16'));
 wipmem_l=setfield(wipmem_l,'ste_rtime',zeros(1,1,'uint16'));
 wipmem_l=setfield(wipmem_l,'sspl_inv2_offset',zeros(1,1,'int16'));
-wipmem_l=setfield(wipmem_l,'tdiff_ms',zeros(1,1,'uint16'));
+wipmem_l=setfield(wipmem_l,'tdiff_10us',zeros(1,1,'uint16'));
 wipmem_l=setfield(wipmem_l,'diff_ramptime',zeros(1,1,'uint16'));
 wipmem_l=setfield(wipmem_l,'epi_mode',zeros(1,1,'uint16'));
 wipmem_l=setfield(wipmem_l,'rf_refocus_duration_us',zeros(1,1,'int16'));
@@ -456,6 +692,44 @@ wipmem_l=setfield(wipmem_l,'necho_blip',zeros(1,1,'uint16'));
 wipmem_l=setfield(wipmem_l,'contr_no_acq_bitmask',zeros(1,1,'uint32'));
 wipmem_l=setfield(wipmem_l,'dual_se_bitmask',zeros(1,1,'uint32'));
 wipmem_l=setfield(wipmem_l,'dual_ref_pos_array',zeros(1,12,'uint16'));
+wipmem_l=setfield(wipmem_l,'rf_delay_us',zeros(1,1,'int16'));
+wipmem_l=setfield(wipmem_l,'rf_se_delay_us',zeros(1,1,'int16'));
+wipmem_l=setfield(wipmem_l,'grad_amp_max_mgauss_cm',zeros(1,1,'uint16'));
+wipmem_l=setfield(wipmem_l,'deph_added_moment',zeros(1,3,'int16'));
+wipmem_l=setfield(wipmem_l,'jitter_moment',zeros(1,3,'int16'));
+wipmem_l=setfield(wipmem_l,'pme_mix_ntr',zeros(1,1,'uint16'));
+wipmem_l=setfield(wipmem_l,'pme_te_ntr',zeros(1,1,'uint16'));
+wipmem_l=setfield(wipmem_l,'refocus_flip',zeros(1,1,'int16'));
+wipmem_l=setfield(wipmem_l,'pme_ramp',zeros(1,1,'uint16'));
+wipmem_l=setfield(wipmem_l,'pme_flat',zeros(1,1,'uint16'));
+wipmem_l=setfield(wipmem_l,'slice_tr_us',zeros(1,1,'uint32'));
+wipmem_l=setfield(wipmem_l,'ndif_dir',zeros(1,1,'uint16'));
+wipmem_l=setfield(wipmem_l,'grad_frac_pow',zeros(1,1,'uint16'));
+wipmem_l=setfield(wipmem_l,'refocus_bwt',zeros(1,1,'uint16'));
+wipmem_l=setfield(wipmem_l,'diffusion_delta',zeros(1,1,'uint16'));
+wipmem_l=setfield(wipmem_l,'diffusion_area',zeros(1,1,'uint16'));
+wipmem_l=setfield(wipmem_l,'diffusion_area_low',zeros(1,1,'uint16'));
+wipmem_l=setfield(wipmem_l,'se_diff_ramp',zeros(1,1,'uint16'));
+wipmem_l=setfield(wipmem_l,'se_diff_flat',zeros(1,1,'uint16'));
+wipmem_l=setfield(wipmem_l,'mse_sep_fac',zeros(1,1,'uint16'));
+wipmem_l=setfield(wipmem_l,'max_v_rf',zeros(1,1,'uint16'));
+wipmem_l=setfield(wipmem_l,'test',zeros(1,1,'int16'));
+wipmem_l=setfield(wipmem_l,'b_diff_low',zeros(1,3,'int16'));
+wipmem_l=setfield(wipmem_l,'flow_sel_dif',zeros(1,6,'int16'));
+wipmem_l=setfield(wipmem_l,'se_crusher_area',zeros(1,3,'int16'));
+wipmem_l=setfield(wipmem_l,'debug_indx',zeros(1,3,'uint16'));
+wipmem_l=setfield(wipmem_l,'siem_rawdatasize_fac',zeros(1,1,'uint16'));
+wipmem_l=setfield(wipmem_l,'nav_n_echoes',zeros(1,3,'uint16'));
+wipmem_l=setfield(wipmem_l,'nav_slewrate',zeros(1,1,'uint16'));
+wipmem_l=setfield(wipmem_l,'diff_low_frac',zeros(1,1,'uint16'));
+wipmem_l=setfield(wipmem_l,'seq_lim_var',zeros(1,1,'uint16'));
+wipmem_l=setfield(wipmem_l,'n_acs_lines_p',zeros(1,1,'int16'));
+wipmem_l=setfield(wipmem_l,'n_acs_lines_s',zeros(1,1,'int16'));
+wipmem_l=setfield(wipmem_l,'shuf_p',zeros(1,1,'int16'));
+wipmem_l=setfield(wipmem_l,'shuf_s',zeros(1,1,'int16'));
+wipmem_l=setfield(wipmem_l,'blip_off_cycle',zeros(1,1,'uint16'));
+wipmem_l=setfield(wipmem_l,'ste_acq_indx',zeros(1,1,'uint16'));
+wipmem_l=setfield(wipmem_l,'mprage_shots',zeros(1,4,'uint16'));
 
 % combine the three structures into one overall structure
 wipmem=struct('wipmem_b',wipmem_b);

@@ -110,7 +110,7 @@ function do=move_matrix(d,mot,direction,varargin)
             tra_matrix=inv(tra_matrix);
         end
         tra_matrix(4,:)=[0,0,0,1];
-        fn_pre=fullfile('~','result','shm','move_matrix_flirt');
+        fn_pre=fullfile('move_matrix_flirt');
         if ~isempty(fid)
             fn_pre=file_addext(fn_pre,['_fid', num2str(fid)]);
         end

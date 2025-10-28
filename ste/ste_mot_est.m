@@ -1,7 +1,4 @@
 function [mot_par,im_coreg]=ste_mot_est(im,iref,mask,method,fast,res_ste)
-
-
-
     if ~isequalfp(res_ste,res_ste(1),1e-4)
         % interpolate the images to be isotropic
         ste_intp_res=min(res_ste(:));

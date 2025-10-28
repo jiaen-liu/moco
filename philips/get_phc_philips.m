@@ -11,6 +11,9 @@ function ph=get_phc_philips(mid)
     [ph,l]=read_raw_philips(mid,'type',3);
     nrep_ph=numel(unique(l.aver));
     tfe_factor=para.tfe_factor;
+    % 2025-08-21: it seems that only one phase correction is performed
+    % per tfe train
+    tfe_factor=1;
     n_delays=numel(unique(l.card));
     if para.ramp_samp_frac > 0.01
         ph=calc_regrid_mat(para.nus_enc,nr_os,apodiz)*ph;
@@ -39,4 +42,5 @@ function ph=get_phc_philips(mid)
     end
     % only use the last average
     ph=ph(:,:,:,tfe_factor*n_delays*ns*(nrep_ph-1)+1:end);
+    ph=reshape(ph,[nr,n_tot_line_shot,nch,tfe_factor*n_delays,ns]);
 end

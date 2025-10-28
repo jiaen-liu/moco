@@ -14,8 +14,10 @@ function db0=ste_rect_b0_fast(db0,par)
         db0=combine_dim(db0,[1,2,3]);
         db0=combine_dim(db0,[2,3]);
         mask=false(si(4)*si(5),1);
-        mask(si(4)+1:si(4)*(si(5)-1))=true;
-        db0=steRegress(db0,cyc,cyc/2,mask);
+        if si(4)*(si(5)-1)>=si(4)+1
+            mask(si(4)+1:si(4)*(si(5)-1))=true;
+            db0=steRegress(db0,cyc,cyc/2,mask);
+        end
         db0=reshape(db0,si);
     end
 end
