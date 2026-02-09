@@ -59,4 +59,4 @@ For this quick demonstration, you will need to download the low resolution examp
 We have demonstrated the utility of this motion robust method for multi-echo GRE at both 7t and 10.5 T.
 
 To grab an idea of how the recon works in this multi-echo GRE application, you may run the demo script, `demo_megre.m`, under the subfolder "demo_megre". 
-For this quick demonstration, you will need to download the example multi-echo GRE data from Zenodo(https://zenodo.org/records/18510882).
+For this quick demonstration, you will need to download the example multi-echo GRE data from [Zenodo](https://zenodo.org/records/18510882).
