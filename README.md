@@ -61,4 +61,4 @@ We have also demonstrated the utility of this motion robust method for mesoscale
 Liu J, van Gelderen P, de Zwart JA, Duyn JH, Huang J, Qu S, Grant A, Auerbach E, Waks M, Lagore R, Delabarre L, Sadeghi-Tarakameh A, Eryaman Y, Adriany G, Ugurbil K, Wu X. Mesoscale whole-brain T2*-weighted and associated quantitative MRI in humans at 10.5 T. Magn Reson Med. under revision.
 
 To grab an idea of how the recon works in this multi-echo GRE application, you may run the demo script, `demo_megre.m`, under the subfolder "demo_megre". 
-For this quick demonstration, you will need to download the example multi-echo GRE data from [Zenodo](https://zenodo.org/records/18510882).
+For this demonstration, you will need to download the example 7 T multi-echo GRE data from [Zenodo](https://zenodo.org/records/18510882). Note that the demo script assumes that the example data are stored under the subfolder "demo_megre/data".
