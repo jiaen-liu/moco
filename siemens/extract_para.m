@@ -1,3 +1,7 @@
+% MODIFICATION HISTORY
+%     2025-07-18 JAdZ
+%         Added ste_acq_indx.
+
 function para=extract_para(mid,siemens_only,dir)
     vendor='siemens';
     if nargin<2
@@ -324,6 +328,15 @@ function para=extract_para(mid,siemens_only,dir)
         else 
             ste3d_mode = 0;
         end
+        short_te_ref=[];
+        if isfield(wip,'short_te_ref')
+            short_te_ref = wip.short_te_ref;
+        end
+        ste_acq_indx=[];
+	if isfield(wip,'ste_acq_indx')
+	    ste_acq_indx = wip.ste_acq_indx;
+        end
+        
         ste_rsamp = wip.ste_rsamp/10000;
         steref_dim_r = wip.steref_dim_r;
         steref_dim_p = wip.steref_dim_p;
@@ -405,7 +418,7 @@ function para=extract_para(mid,siemens_only,dir)
                            'nk_shot','nk_shot_ref',...
                            'b_fix_n_interleaves',...
                            'echo_spacing','int_te_shift',...
-                           'ste3d_mode','ste_rsamp',...
+                           'short_te_ref','ste3d_mode','ste_acq_indx','ste_rsamp',...
                            'steref_dim_r','steref_dim_p','steref_dim_s',...
                            'steref_res_r','steref_res_p','steref_res_s',...
                            'n_interleaves_steref','n_echo_steref','b_ste_en',...

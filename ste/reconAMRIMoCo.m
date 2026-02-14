@@ -1,5 +1,6 @@
 function reconAMRIMoCo(folder,mid,fPar,steps,varargin)
 % example reconAMRIMoCo ~/data/20200902_1 125 {'~/matlab/ste/steParMoCoB0Co.conf'}
+% in MATLAB console reconAMRIMoCo('~/data/20200902_1',125{'~/matlab/ste/steParMoCoB0Co.conf'},{'full'});
     if ischar(mid)
         mid=eval(mid);
     end

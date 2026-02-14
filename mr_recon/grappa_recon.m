@@ -62,10 +62,10 @@ function im_recon=grappa_recon(d,kyz,w,par)
                 im_recon_tmp(:,:,:,:,iyp,izp);
         end
     end
-    
-    if nd==3
-        im_recon=fftmr(im_recon,-1,[1,2,3])*(nx*ny*nz);
-    else
-        im_recon=fftmr(im_recon,-1,[1,2])*(nx*ny);
-    end
+    im_recon=fftmr(im_recon,-1,[1:nd]);
+% $$$     if nd==3
+% $$$         im_recon=fftmr(im_recon,-1,[1,2,3])*(nx*ny*nz);
+% $$$     else
+% $$$         im_recon=fftmr(im_recon,-1,[1,2])*(nx*ny);
+% $$$     end
 end

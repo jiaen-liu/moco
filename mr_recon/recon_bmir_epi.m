@@ -1,3 +1,4 @@
+% 20250627: Jiaen Liu, change data structure to allow mulitple packages
 function [y,para,l,cov_mat]=recon_bmir_epi(mid,varargin)
     p=inputParser;
     apodiz=0.25;
@@ -48,9 +49,12 @@ function [y,para,l,cov_mat]=recon_bmir_epi(mid,varargin)
     nps=np/s1;
     npars=npar/s2;
     nreps=para.n_reps;
+    nave=para.n_aves;
+    ndyn=para.n_dyn;
     
     tfe_factor=para.tfe_factor;
     n_delays=para.n_delays;
+    n_packages=para.n_packages;
     % get noise data
     n=read_raw_philips(mid,'type',5);
     cov_mat=cov(conj(n));
@@ -73,6 +77,7 @@ function [y,para,l,cov_mat]=recon_bmir_epi(mid,varargin)
     end
     % truncate readout oversampling
     dx=dx(idx_truncate(size(dx,1),nr),:);
+    dx=reshape(dx,[nr,nch,numel(dx)/nr/nch]);
     % correct fov in phase encoding direction
     % note: fov is not corrected for 3d navigator in all three directions
     if ~no_fov_crct
@@ -80,7 +85,6 @@ function [y,para,l,cov_mat]=recon_bmir_epi(mid,varargin)
             % gre data has been corrected by the scanner
             % no correction is needed
             % epi is only corrected in the slice direction
-            dx=reshape(dx,[nr,nch,numel(dx)/nr/nch]);
             dx=dx.*...
                exp(-1i*reshape(2*pi*l.ky*para.p_shift(1)/para.sampled_fovs(2),...
                                [1,1,numel(dx)/nr/nch]));
@@ -89,21 +93,136 @@ function [y,para,l,cov_mat]=recon_bmir_epi(mid,varargin)
     if (ns>1 && tfe_factor>1) || (ns>1 && n_delays>1)
         error('*** Multi-slice TFE or multi-delay not supported! ***');
     end
-    % reshape dx
-    n_tr=numel(dx)/nr/nch/n_tot_line_shot/ns;
-    dx=reshape(dx,[nr,nch,n_tot_line_shot,ns,n_tr]);
+    
     % apodize k-space
     if nps>2
+% $$$         dx=dx.*reshape(win_tukey(nps,apodiz,(l.ky-min(l.ky(:)))/nps),...
+% $$$                        [1,1,n_tot_line_shot,ns_package,n_tr_1rep,n_packages,nreps]);
         dx=dx.*reshape(win_tukey(nps,apodiz,(l.ky-min(l.ky(:)))/nps),...
-                       [1,1,n_tot_line_shot,ns,n_tr]);
+                       [1,1,numel(dx)/nr/nch]);
     end
     if npars>2
+% $$$         dx=dx.*reshape(win_tukey(npars,apodiz,(l.kz-min(l.kz(:)))/npars),...
+% $$$                        [1,1,n_tot_line_shot,ns_package,n_tr_1rep,n_packages,nreps]);
         dx=dx.*reshape(win_tukey(npars,apodiz,(l.kz-min(l.kz(:)))/npars),...
-                       [1,1,n_tot_line_shot,ns,n_tr]);
+                       [1,1,numel(dx)/nr/nch]);
     end
-    % correct slice order
-    loca=reshape(l.loca,[n_tot_line_shot,ns,n_tr]);
-    loca=reshape(loca(1,:,:),[ns,n_tr]);
+
+    % reshape dx
+    n_tr_1rep=numel(dx)/nr/nch/n_tot_line_shot/ns/nreps;
+    n_tr=n_tr_1rep*nreps;
+
+    if mod(ns,n_packages)==0
+        ns_package=ns/n_packages;
+        dx=reshape(dx,[nr,nch,n_tot_line_shot,ns_package,n_tr_1rep,nave,n_packages,ndyn]);
+        % nr, nch, n_tot_line_shot,ns_package,n_packages,n_tr_1rep,nave,ndyn
+        dx=permute(dx,[1,2,3,4,7,5,6,8]);
+        dx=reshape(dx,[nr,nch,n_tot_line_shot,ns,n_tr]);
+        % correct slice order
+        l.loca=reshape(l.loca,[n_tot_line_shot,ns_package,n_tr_1rep,nave,n_packages,ndyn]);
+        l.loca=permute(l.loca,[1,2,5,3,4,6]);
+        loca=reshape(l.loca(1,:,:,:,:,:),[ns,n_tr]);
+        l.loca=l.loca(:);
+
+        l.ky=reshape(l.ky,[n_tot_line_shot,ns_package,n_tr_1rep,nave,n_packages,ndyn]);
+        l.ky=permute(l.ky,[1,2,5,3,4,6]);
+        l.ky=l.ky(:);
+
+        l.kz=reshape(l.kz,[n_tot_line_shot,ns_package,n_tr_1rep,nave,n_packages,ndyn]);
+        l.kz=permute(l.kz,[1,2,5,3,4,6]);
+        l.kz=l.kz(:);
+    else
+        ns_last_package=floor(ns/n_packages);
+        ns_package=ns_last_package+1;
+        n_package_first=ns-ns_last_package*n_packages;
+        n_package_last=n_packages-n_package_first;
+        
+        n_line_dyn=n_tot_line_shot*ns*n_tr_1rep*nave;
+        n_line_package=n_tot_line_shot*ns_package*n_tr_1rep*nave;
+        n_line_last_package=n_tot_line_shot*ns_last_package*n_tr_1rep*nave;
+
+        dxcp=zeros(nr,nch,n_tot_line_shot,ns,n_tr_1rep,nave,ndyn);
+        loca_cp=zeros(n_tot_line_shot,ns,n_tr_1rep,nave,ndyn);
+        ky_cp=zeros(n_tot_line_shot,ns,n_tr_1rep,nave,ndyn);
+        kz_cp=zeros(n_tot_line_shot,ns,n_tr_1rep,nave,ndyn);
+        l.loca=l.loca(:);
+        l.ky=l.ky(:);
+        l.kz=l.kz(:);
+        
+        for idyn=1:ndyn
+            for ipack=1:n_package_first
+                dxcp(:,:,:,(ipack-1)*ns_package+1:ipack*ns_package,:,:,idyn)=...
+                    reshape(dx(:,:,(idyn-1)*n_line_dyn+...
+                               [(ipack-1)*n_line_package+1:ipack*n_line_package]),...
+                            [nr,nch,n_tot_line_shot,...
+                             ns_package,n_tr_1rep,nave]);
+
+                loca_cp(:,(ipack-1)*ns_package+1:ipack*ns_package,:,:,idyn)=...
+                    reshape(l.loca((idyn-1)*n_line_dyn+...
+                                   [(ipack-1)*n_line_package+1:ipack*n_line_package]),...
+                            [n_tot_line_shot,ns_package,n_tr_1rep,nave]);
+                ky_cp(:,(ipack-1)*ns_package+1:ipack*ns_package,:,:,idyn)=...
+                    reshape(l.ky((idyn-1)*n_line_dyn+...
+                                 [(ipack-1)*n_line_package+1:ipack*n_line_package]),...
+                            [n_tot_line_shot,ns_package,n_tr_1rep,nave]);
+                kz_cp(:,(ipack-1)*ns_package+1:ipack*ns_package,:,:,idyn)=...
+                    reshape(l.kz((idyn-1)*n_line_dyn+...
+                                 [(ipack-1)*n_line_package+1:ipack*n_line_package]),...
+                            [n_tot_line_shot,ns_package,n_tr_1rep,nave]);
+            end
+            
+            for ipack=1:n_package_last
+                dxcp(:,:,:,...
+                     ns_package*n_package_first+(ipack-1)*ns_last_package+...
+                     [1:ns_last_package],...
+                     :,:,idyn)=...
+                     reshape(dx(:,:,(idyn-1)*n_line_dyn+...
+                                n_package_first*n_line_package+...
+                                (ipack-1)*n_line_last_package+...
+                                [1:n_line_last_package]),...
+                             [nr,nch,n_tot_line_shot,...
+                              ns_last_package,n_tr_1rep,nave]);
+
+                loca_cp(:,ns_package*n_package_first+...
+                        (ipack-1)*ns_last_package+...
+                        [1:ns_last_package],:,:,idyn)=...
+                        reshape(l.loca((idyn-1)*n_line_dyn+...
+                                       n_package_first*n_line_package+...
+                                       (ipack-1)*n_line_last_package+...
+                                       [1:n_line_last_package]),...
+                                [n_tot_line_shot,ns_last_package,n_tr_1rep,nave]);
+
+                ky_cp(:,ns_package*n_package_first+...
+                      (ipack-1)*ns_last_package+...
+                      [1:ns_last_package],:,:,idyn)=...
+                      reshape(l.ky((idyn-1)*n_line_dyn+...
+                                   n_package_first*n_line_package+...
+                                   (ipack-1)*n_line_last_package+...
+                                   [1:n_line_last_package]),...
+                              [n_tot_line_shot,ns_last_package,n_tr_1rep,nave]);
+
+                kz_cp(:,ns_package*n_package_first+...
+                      (ipack-1)*ns_last_package+...
+                      [1:ns_last_package],:,:,idyn)=...
+                      reshape(l.kz((idyn-1)*n_line_dyn+...
+                                   n_package_first*n_line_package+...
+                                   (ipack-1)*n_line_last_package+...
+                                   [1:n_line_last_package]),...
+                              [n_tot_line_shot,ns_last_package,n_tr_1rep,nave]);
+            end
+        end
+        dx=dxcp;
+        l.loca=loca_cp;
+        loca=reshape(l.loca(1,:,:,:,:,:),[ns,n_tr]);
+        l.ky=ky_cp;
+        l.kz=kz_cp;
+        l.loca=l.loca(:);
+        l.ky=l.ky(:);
+        l.kz=l.kz(:);
+        clear dxcp loca_cp ky_cp kz_cp;
+        dx=reshape(dx,[nr,nch,n_tot_line_shot,ns,n_tr]);
+    end
+    
     dxcp=dx;
     for i=1:n_tr
         dx(:,:,:,loca(:,i)+1,i)=dxcp(:,:,:,:,i);
@@ -134,13 +253,15 @@ function [y,para,l,cov_mat]=recon_bmir_epi(mid,varargin)
         dblpo=get_phc_philips(mid);
         for i=1:size(idx,2)
             for ie=1:necho
-                dx_contr=dx(:,(ie-1)*nk_shot+1:ie*nk_shot,:,idx(:,i),:);
-                dblpo_contr=dblpo(:,(ie-1)*nk_shot+1:...
-                                  ie*nk_shot,idx(:,i),:);
-                dx_contr=pha_crct_epi(dx_contr,dblpo_contr,...
-                                      para.ro_pol(:,ie),para.ro_pol(:,ie),...
-                                      ord_pha_crct,1);
-                dx(:,(ie-1)*nk_shot+1:ie*nk_shot,:,idx(:,i),:)=dx_contr;
+                for is=1:ns
+                    dx_contr=dx(:,(ie-1)*nk_shot+1:ie*nk_shot,is,idx(:,i),:);
+                    dblpo_contr=dblpo(:,(ie-1)*nk_shot+1:...
+                                      ie*nk_shot,idx(:,i),:,is);
+                    dx_contr=pha_crct_epi(dx_contr,dblpo_contr,...
+                                          para.ro_pol(:,ie),para.ro_pol(:,ie),...
+                                          ord_pha_crct,1);
+                    dx(:,(ie-1)*nk_shot+1:ie*nk_shot,is,idx(:,i),:)=dx_contr;
+                end
             end
         end
     elseif ~no_pc && necho>=3 && ~para.b_epi_positive
@@ -182,12 +303,10 @@ function [y,para,l,cov_mat]=recon_bmir_epi(mid,varargin)
         end
     end
     if b0_crct
-        if ~para.isgre
-            error('*** Non-GRE data not supported yet! ***');
-        end
         if ~para.nav1d_enable
             error('*** No 1d navigator was acquired ***');
         end
+        disp('*** Correcting frequency changes using Philips phase navigator ***');
         [~,~,~,~,df0,~,~]=get_philips_phnav(mid);
         dx=fftmr(dx,1,1);
         % when done, dx is in image space

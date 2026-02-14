@@ -1,3 +1,6 @@
+% Modifiction history:
+%    2025-07-18 JAdZ
+%        Support for newer sort_siemens output with .raw0.svd and .raw1.svd files
 function [y,mdh]=readmdh(mid,acqType)
     if nargin<2
         acqType='all';
@@ -5,6 +8,10 @@ function [y,mdh]=readmdh(mid,acqType)
     para=extract_para(mid);
     if ~ischar(mid)
         fnmdh=get_file_filter('.',['MID*',num2str(mid),'.mdh']);
+		if isempty(fnmdh)
+			dname=['./meas_MID',num2str(mid,'%05d'),'_recon/'];
+			fnmdh=get_file_filter(dname,['MID*',num2str(mid),'.mdh']);
+		end
     else
         error('*** MID is needed! ***');
     end

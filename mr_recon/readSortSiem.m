@@ -10,6 +10,8 @@ function y=readSortSiem(mid,varargin)
 %    2022-10-04 JAdZ
 %        Now calling sort_siemens with the -filemode 0666 option to allow all to
 %        read and overwrite.
+%    2025-07-18 JAdZ
+%        Support for newer sort_siemens output with .raw0.svd and .raw1.svd files
 % parse input
     p=inputParser;
     keyNoise=0;
@@ -33,16 +35,51 @@ function y=readSortSiem(mid,varargin)
     if keyNav
         ff=['MID*',num2str(mid),...
             '.nav.svd'];
+	fn=get_file_filter('./',ff);
+	if isempty(fn)
+	    dname=['./meas_MID',num2str(mid,'%05d'),'_recon/'];
+	    if exist(dname)
+		fn=get_file_filter(dname,['MID*',num2str(mid),'.raw',num2str(para.ste_acq_indx),'.svd']);
+	    end
+	else
+	    dname='./';
+	end
     else
         ff=['MID*',num2str(mid),...
             '.raw.svd'];
+	fn=get_file_filter('./',ff);
+	if isempty(fn)
+	    dname=['./meas_MID',num2str(mid,'%05d'),'_recon/'];
+	    if exist(dname)
+		if ((para.ste_acq_indx == 0) && (para.b_ste_en == 1))
+		    fn=get_file_filter(dname,['MID*',num2str(mid),'.raw',num2str(para.ste_acq_indx+1),'.svd']);
+		else
+		    fn=get_file_filter(dname,['MID*',num2str(mid),'.raw0.svd']);
+		end
+	    end
+	else
+	    dname='./';
+	end
     end
-    fn=get_file_filter('.',ff);
     if isempty(fn)
         cmd=['sort_siemens -filemode 0666 ' num2str(mid)];
         if system(cmd)~=0
             error(['*** ',cmd,' was not successful! ***']);
         end
+	dname=['./meas_MID',num2str(mid,'%05d'),'_recon/'];
+	if exist(dname)
+	    if keyNav
+		fn=get_file_filter(dname,['MID*',num2str(mid),'.raw',num2str(para.ste_acq_indx),'.svd']);
+	    else
+		if (para.ste_acq_indx == 0)
+		    fn=get_file_filter(dname,['MID*',num2str(mid),'.raw',num2str(para.ste_acq_indx+1),'.svd']);
+		else
+		    fn=get_file_filter(dname,['MID*',num2str(mid),'.raw0.svd']);
+		end
+	    end
+	else
+	    error('no dname!');
+	end
     end
     if isempty(idxTR)
         % idxTR is determined based on acqusition type
@@ -62,11 +99,11 @@ function y=readSortSiem(mid,varargin)
             i2=i2+para.(strAcq{i,2});
             if i2<i1
                 eval([strAcq{i,1},...
-                     '=[];']);
+                      '=[];']);
             else
                 
                 eval([strAcq{i,1},...
-                     '=[i1,i2];']);
+                      '=[i1,i2];']);
             end
             i1=i1+para.(strAcq{i,2});
         end

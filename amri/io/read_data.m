@@ -1,4 +1,4 @@
-function [data,header]=read_data(file,varargin)
+function [data,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10,d11,d12,d13,d14,d15]=read_data(file,varargin)
 
 %+
 % NAME:
@@ -63,10 +63,12 @@ function [data,header]=read_data(file,varargin)
 %           Thanks to Jiaen Liu for the inputParser example code. Optional
 %           arguments silent and info are now also processed this way.
 %           JAdZ, October 8, 2020
+%     #11   Added support for v11.4 data.
+%           JAdZ, February 28, 2023
 %-
 
 % initialization
-max_supported_version=11.3;
+max_supported_version=11.4;
 little_endian=bitget(uint32(1),1);
 
 % optional arguments 
@@ -201,12 +203,13 @@ else
 	return;
 end
 
-% read header
-if [ head2(3) > 0 ]
-	header=fread(fid,head2(3),'uint8=>uint8');
-	header=std_data_rev(header);
-else
-	header=-1;
+% read other items, if any
+for i=3:head2(1),
+	if [ head2(i) > 0 ]
+		cd=fread(fid,head2(i),'uint8=>uint8');
+		% 2023-02-28: This is not recommended, according to matlab, since it does not use "array processing power", I should test performance penalty!
+		eval('d'+string(i-2)+'=std_data_rev(cd);');
+	end
 end
 
 % close file

@@ -110,7 +110,4 @@ function [b1,cp,cp_im]=ste_sense_ext(par,sorted_ste)
         b1=permute(b1,[rev_permute,4]);
     end
     b1=covNorm(b1,inv(sorted_ste.inv_cov),4);
-% $$$     if para.freq/42.58e6>6
-% $$$         
-% $$$     end
 end
