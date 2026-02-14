@@ -56,7 +56,9 @@ To grab an idea of how the recon works in this fMRI application, you may run the
 For this quick demonstration, you will need to download the low resolution example fMRI data (2 mm isotropic, 10 volumes) from the subfolder "bold-data" shared at [this google drive](https://drive.google.com/drive/folders/1cVI2BXiPV-lKmIz1KD7RiYVmy8S9kSTL?usp=drive_link). Note that the demo script assumes that the example fMRI data are stored under the subfolder "demo_bold/data".
 
 ### Multi-echo GRE
-We have demonstrated the utility of this motion robust method for multi-echo GRE at both 7t and 10.5 T.
+We have also demonstrated the utility of this motion robust method for mesoscale anatomic T2*-weighted whole brain imaging at 10.5 T, and reported our findings in the following paper: 
+
+Liu J, van Gelderen P, de Zwart JA, Duyn JH, Huang J, Qu S, Grant A, Auerbach E, Waks M, Lagore R, Delabarre L, Sadeghi-Tarakameh A, Eryaman Y, Adriany G, Ugurbil K, Wu X. Mesoscale whole-brain T2*-weighted and associated quantitative MRI in humans at 10.5 T. Magn Reson Med. under revision.
 
 To grab an idea of how the recon works in this multi-echo GRE application, you may run the demo script, `demo_megre.m`, under the subfolder "demo_megre". 
 For this quick demonstration, you will need to download the example multi-echo GRE data from [Zenodo](https://zenodo.org/records/18510882).
