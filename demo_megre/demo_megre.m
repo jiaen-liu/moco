@@ -2,10 +2,10 @@
 close all; clc; clearvars;
 
 %% Specify the paths for the working and data directories
-workDir='~/myProjects/moco/';
+workDir='~/data-sharing/moco'; % '~/myProjects/moco/';
 addpath(genpath(workDir));
 
-dataDir = '~/myData/megre-data';
+dataDir = '~/data-sharing/moco/demo_megre/data/'; %'~/myData/megre-data';
 cd(dataDir);
 
 %% Specify the measurement number

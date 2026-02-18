@@ -97,24 +97,24 @@ function s=prep_ste(mid,varargin)
 	        if exist(dname)
 	            fname=get_file_filter(dname,['MID*',num2str(mid(imid)),'.raw',num2str(para.ste_acq_indx),'.svd']);
 	        end
-	        % finally test for really old data
+            % finally test for really old data
+            if isempty(fname)
+    		    fname=get_file_filter('.',['MID*',num2str(mid(imid)),'.steref.svd']); % legacy support for older data
                 if isempty(fname)
-		    fname=get_file_filter('.',['MID*',num2str(mid(imid)),'.steref.svd']); % legacy support for older data
+                    cmd=['sort_siemens -filemode 0666 ' num2str(mid(imid))];
+                    if system(cmd)~=0
+                        error(['*** ',cmd,' was not successful! ***']);
+                    end
+    		        if exist(dname)
+                        fname=get_file_filter(dname,['MID*',num2str(mid(imid)),'.raw',num2str(para.ste_acq_indx),'.svd']);
+    		        end
                     if isempty(fname)
-                        cmd=['sort_siemens -filemode 0666 ' num2str(mid(imid))];
-                        if system(cmd)~=0
-                            error(['*** ',cmd,' was not successful! ***']);
-                        end
-		        if exist(dname)
-              		    fname=get_file_filter(dname,['MID*',num2str(mid(imid)),'.raw',num2str(para.ste_acq_indx),'.svd']);
-		        end
-             	        if isempty(fname)
-			    error(['*** ',fname,' still does not exist! ***']);
-                        end
-		    else
-		        dname='./';
-		    end
-                end
+        			    error(['*** ',fname,' still does not exist! ***']);
+                    end
+    		    else
+    		        dname='./';
+    		    end
+            end
             end
             fnmdh=get_file_filter(dname,['MID*',num2str(mid(imid)),'.mdh']);
         end
