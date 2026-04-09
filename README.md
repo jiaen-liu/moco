@@ -50,7 +50,7 @@ Second, run the reconstruction function:
 ### BOLD fMRI 
 We have demonstrated the utility of this motion robust method for resting state BOLD functional MRI (fMRI) at 10.5 T and reported our findings in the following paper: 
 
-Qu S, Liu J, van Gelderen P, de Zwart JA, Duyn JH, Waks M, Lagore R, Bratch A, Grant A, Auerbach E, Delabarre L, Sadeghi-Tarakameh A, Eryaman Y, Adriany G, Ugurbil K, Wu X. Advancing whole-brain BOLD functional MRI in humans at 10.5 T with motion-robust 3D echo-planar imaging, parallel transmission, and high-density radiofrequency receive coils. Magn Reson Med. 2025 Oct 17. doi: 10.1002/mrm.70110.
+Qu S, Liu J, van Gelderen P, de Zwart JA, Duyn JH, Waks M, Lagore R, Bratch A, Grant A, Auerbach E, Delabarre L, Sadeghi-Tarakameh A, Eryaman Y, Adriany G, Ugurbil K, Wu X. Advancing whole-brain BOLD functional MRI in humans at 10.5 T with motion-robust 3D echo-planar imaging, parallel transmission, and high-density radiofrequency receive coils. Magnetic Resonance in Medicine95, no. 2 (2026): 1068–1088, https://doi.org/10.1002/mrm.70110.
 
 To grab an idea of how the recon works in this fMRI application, you may run the demo script, `demo_BOLD.m`, under the subfolder "demo_bold". 
 For this quick demonstration, you will need to download the low resolution example fMRI data (2 mm isotropic, 10 volumes) from the subfolder "bold-data" shared at [this google drive](https://drive.google.com/drive/folders/1cVI2BXiPV-lKmIz1KD7RiYVmy8S9kSTL?usp=drive_link). Note that the demo script assumes that the example fMRI data are stored under the subfolder "demo_bold/data".
@@ -58,7 +58,7 @@ For this quick demonstration, you will need to download the low resolution examp
 ### Multi-echo GRE
 We have also demonstrated the utility of this motion robust method for mesoscale anatomic T2*-weighted whole brain imaging at 10.5 T, and reported our findings in the following paper: 
 
-Liu J, van Gelderen P, de Zwart JA, Duyn JH, Huang J, Qu S, Grant A, Auerbach E, Waks M, Lagore R, Delabarre L, Sadeghi-Tarakameh A, Eryaman Y, Adriany G, Ugurbil K, Wu X. Mesoscale whole-brain T2*-weighted and associated quantitative MRI in humans at 10.5 T. Magn Reson Med. under revision.
+Liu J, van Gelderen P, de Zwart JA, Duyn JH, Huang J, Qu S, Grant A, Auerbach E, Waks M, Lagore R, Delabarre L, Sadeghi-Tarakameh A, Eryaman Y, Adriany G, Ugurbil K, Wu X. Mesoscale whole-brain T2*-weighted and associated quantitative MRI in humans at 10.5 T. Magnetic Resonance in Medicine (2026): 1–9, https://doi.org/10.1002/mrm.70366.
 
 To grab an idea of how the recon works in this multi-echo GRE application, you may run the demo script, `demo_megre.m`, under the subfolder "demo_megre". 
 For this demonstration, you will need to download the example 7 T multi-echo GRE data from [Zenodo](https://zenodo.org/records/18510882). Note that the demo script assumes that the example data are stored under the subfolder "demo_megre/data".
