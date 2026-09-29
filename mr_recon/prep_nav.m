@@ -6,6 +6,12 @@ function [d,te,fov,res]=prep_nav(mid,navtype,para,no_regress,whitening)
         whitening=0;
     end
     d=readSortSiem(mid,'nav',1,'main',1);
+    % 20260710: Jiaen Liu, if all navigators have the same length,
+    % sort_siemens will separate them. It needs to be confirmed.
+    si=size(d);
+    if si(2)>1
+        d=reshape(d,[si(1)*si(2),1,1,si(4),si(5)]);
+    end
     [dmdh,mdhTempl]=readmdh(mid,'noise');
     if navtype==0
         return;

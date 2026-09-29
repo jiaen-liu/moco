@@ -24,6 +24,7 @@ function [b0,pha0]=b0_map(x,dte,pha0)
     end
     x=reshape(x,[nx,ny,nz,necho]);
     mag=abs(x);
+    mag(mag<median(mag(:))*1e-6)=0;
     p=angle(x);
     pd=angle(x(:,:,:,2)./x(:,:,:,1));
     pdfit=pd;
@@ -61,6 +62,9 @@ function [b0,pha0]=b0_map(x,dte,pha0)
     pha0_vox=0;
     for i=1:n
         mag_voxel = a2v(mag(i, :));
+        if mag_voxel(1)~=0
+            mag_voxel=mag_voxel/mag_voxel(1);
+        end
         Atest = [te_null.*mag_voxel, mag_voxel];
         rank_defi=0;
         if rank(Atest)<2

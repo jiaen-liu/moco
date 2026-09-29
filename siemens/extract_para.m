@@ -179,6 +179,7 @@ function para=extract_para(mid,siemens_only,dir)
     if ~siemens_only
         wip=amri_epi_wipmem(header);
         wip=struct2double(wip);
+        version=wip.seq_version;
         t_dwell_ste = 1.0/wip.steref_bandwidth*1e9/2;
         % inversion pulse train length
         ir_pulse_train_length = wip.ir_pulse_train_length;
@@ -300,29 +301,18 @@ function para=extract_para(mid,siemens_only,dir)
             n_blipoff_tr = n_blipoff_reps*...
                 n_partitions/sense_rate_s;
         end
-        % number of reference lines per contrast
-        n_refs = wip.n_ref_echoes;
+
 
         % number of k-lines per shot
         nk_shot = np/n_interleaves/sense_rate_p;
-        nk_shot_ref = nk_shot+n_refs(1);
+
+        
         % fixed interleaevs
         b_fix_n_interleaves = wip.fixed_n_interleaves;
         % time between echos
         echo_spacing = wip.echo_spacing;
         int_te_shift = wip.int_te_shift;
-        
-        if isgre
-            nte_contr=0;
-            te_contr=[];
-            for i=1:n_contrasts
-                nte_contr=nte_contr+n_refs(i)+1;
-                te_contr=[te_contr;...
-                          header.alTE{i}/1000+...
-                          [0:n_refs(i)].'*echo_spacing*1e-3];
-            end
-        end        
-
+        % short TE navigator or the 3D navigator for moco
         if isfield(wip,'ste3d_mode')
             ste3d_mode = wip.ste3d_mode;
         else 
@@ -355,9 +345,45 @@ function para=extract_para(mid,siemens_only,dir)
         te_ste=0;
         if b_ste_en
             dte_ste=wip.ste_rtime*1e-3+1/wip.steref_bandwidth*steref_dim_r*1000;
-            te_ste=double(wip.echo_time_steref_us)*1e-3;
+            % 09/07/2026, Jiaen Liu: changes needed when the STE navigator is a contrast
+            if version >=2.6
+                te_ste=te_contr(ste_acq_indx+1);
+                te_contr(ste_acq_indx+1)=[];
+                nte_contr=nte_contr-1;
+                te=te_contr(1);
+            else
+                te_ste=double(wip.echo_time_steref_us)*1e-3;
+            end
             te_ste=([0:n_echo_steref-1]-floor(n_echo_steref/2))*dte_ste+te_ste;
         end
+
+        % number of reference lines per contrast
+        n_refs = wip.n_ref_echoes;
+        % 09/07/2026, Jiaen Liu: changes needed when the STE navigator is a contrast
+        if b_ste_en && version >=2.6
+            n_refs(ste_acq_indx+1)=[];
+            if b_nav_en 
+                n_navs(ste_acq_indx+1)=[];
+                b_nav_pol(ste_acq_indx+1)=[];
+            end
+            b_epi_pol(ste_acq_indx+1)=[];
+            n_contrasts=n_contrasts-1;
+        end
+        nk_shot_ref = nk_shot+n_refs(1);
+        
+        if isgre
+            nte_contr=0;
+            te_contr_gre=[];
+            for i=1:n_contrasts
+                nte_contr=nte_contr+n_refs(i)+1;
+                te_contr_gre=[te_contr_gre;...
+                          te_contr(i)+...
+                          [0:n_refs(i)].'*echo_spacing*1e-3];
+            end
+            te_contr=te_contr_gre;
+        end        
+
+        
         idx_nref = (1:floor(nk_shot/2)+1).';
         if floor(nk_shot/2)+n_refs(1)+1 <= nk_shot_ref-1
             idx_nref = [idx_nref;[floor(nk_shot/2)+n_refs(1)+2:nk_shot_ref].'];
@@ -398,7 +424,7 @@ function para=extract_para(mid,siemens_only,dir)
         n_tr = n_noise_tr+n_dummy_tr+...
                n_blipoff_tr+n_sense_tr+...
                n_nvarte_tr+n_main_tr;
-        version=wip.seq_version;
+        
         parawip=var2struct('t_dwell_ste','ir_pulse_train_length','ir_duration',...
                            'mtc_fa','rf_tbw','fatsat_fa',...
                            'time_stamp','time_stamp_date','vte_arr',...
@@ -427,7 +453,8 @@ function para=extract_para(mid,siemens_only,dir)
                            'te_ro_ref','te_ro',...
                            'n_main_tr','n_noise_tr','n_noise_shots',...
                            'n_dummy_tr','n_dummy_shots',...
-                           'n_tr','nte_contr','te_contr','n_main_shots',...
+                           'n_tr','nte_contr','te_contr','te','n_contrasts',...
+                           'n_main_shots',...
                            'ir_bunch_slices', 'bunch_no_cyc','version');
         para=pass_var_struct(para,parawip);
     end

@@ -416,6 +416,30 @@ function wipmem=define_amri_epi_wipmem()
 %         This version was automatically updated by bash script
 %         generate_amri_epi_wipmem_update.sh on 2025-07-12 04:00:06, based
 %         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2025/11/14, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2025-11-14 04:00:10, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2025/11/19, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2025-11-19 04:00:10, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2026/01/09, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2026-01-09 04:00:11, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2026/01/15, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2026-01-15 04:00:09, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2026/01/23, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2026-01-23 04:00:14, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
+%     2026/02/07, JAdZ
+%         This version was automatically updated by bash script
+%         generate_amri_epi_wipmem_update.sh on 2026-02-07 04:00:07, based
+%         on /misc/imeel/dezwart/prog/siemens/seq/AMRI_epi/AMRI_epi_funct/AMRI_epi_wipmem.h.
 %-
 
 % The structure that describes tFree - convert 't' to true/1, 'f' to false/0
@@ -564,6 +588,9 @@ wipmem_b=setfield(wipmem_b,'diff_angle_ack',uint8(0));
 wipmem_b=setfield(wipmem_b,'mprage_type',uint8(0));
 wipmem_b=setfield(wipmem_b,'ste_bw_set',uint8(0));
 wipmem_b=setfield(wipmem_b,'fixed_mprage_shots',uint8(0));
+wipmem_b=setfield(wipmem_b,'stable_error_popup',uint8(0));
+wipmem_b=setfield(wipmem_b,'switch_release_mode',uint8(0));
+wipmem_b=setfield(wipmem_b,'mars_internal_receiver',uint8(0));
 
 % The structure that describes dFree
 wipmem_d=struct('seq_version',double(0));
@@ -730,6 +757,12 @@ wipmem_l=setfield(wipmem_l,'shuf_s',zeros(1,1,'int16'));
 wipmem_l=setfield(wipmem_l,'blip_off_cycle',zeros(1,1,'uint16'));
 wipmem_l=setfield(wipmem_l,'ste_acq_indx',zeros(1,1,'uint16'));
 wipmem_l=setfield(wipmem_l,'mprage_shots',zeros(1,4,'uint16'));
+wipmem_l=setfield(wipmem_l,'switch_release_vers',zeros(1,1,'uint16'));
+wipmem_l=setfield(wipmem_l,'slice_tr2_us',zeros(1,1,'uint32'));
+wipmem_l=setfield(wipmem_l,'slice_tr3_us',zeros(1,1,'uint32'));
+wipmem_l=setfield(wipmem_l,'slice_tr4_us',zeros(1,1,'uint32'));
+wipmem_l=setfield(wipmem_l,'diff_angle_theta',zeros(1,1,'uint16'));
+wipmem_l=setfield(wipmem_l,'diff_angle_phi',zeros(1,1,'uint16'));
 
 % combine the three structures into one overall structure
 wipmem=struct('wipmem_b',wipmem_b);

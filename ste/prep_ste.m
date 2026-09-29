@@ -11,7 +11,6 @@
 %                       allow no_b0_main in compiled program
 % 2025-07-18 JAdZ: Add support for new sort_siemens, which produces .raw0 and .raw1
 %                  instead of .nav and .raw.
-% 2026-06-29 Yujia: address svd file not found
 function s=prep_ste(mid,varargin)
     version = 'v1.1';
     p=inputParser;
@@ -90,271 +89,318 @@ function s=prep_ste(mid,varargin)
             disp(['*** MID:', num2str(mid(imid)), ' ***']);
             disp('*** Processing navigator data ***');
             para=extract_para(mid(imid));
-			dname='./';
+	    dname='./';
             fname=get_file_filter('.',['MID*',num2str(mid(imid)),'.nav.svd']); % used to be steref, PvG 21Sep22
             if isempty(fname)
-	        % 2025-07-18 JAdZ: Support for newer send_siemens, look for .raw0.svd, when that exists
-	        dname=['./meas_MID',num2str(mid(imid),'%05d'),'_recon/'];
-	        if exist(dname,'dir')
-	            fname=get_file_filter(dname,['MID*',num2str(mid(imid)),'.raw',num2str(para.ste_acq_indx),'.svd']);
-	        end
-            % finally test for really old data
-            if isempty(fname)
-				dname='./';
-    		    fname=get_file_filter('.',['MID*',num2str(mid(imid)),'.steref.svd']); % legacy support for older data
-                if isempty(fname)
+                % 2025-07-18 JAdZ: Support for newer send_siemens, look for .raw0.svd, when that exists
+		dname=['./meas_MID',num2str(mid(imid),'%05d'),'_recon/'];
+		% 2026-02-23 JAdZ: Also support new recon of old (VB) data
+		if ~exist(dname)
+		    dname=['./meas_MID',num2str(mid(imid)),'_recon/'];
+		end
+		if exist(dname)
+		    % the scan could contain a conventional navigator, which still produces a .nav.svd file
+                    % we should not want to read a conventional nav in the prep_ste code if both exist
+                    %					fname=get_file_filter(dname,['MID*',num2str(mid(imid)),'.nav.svd']);
+                    %					if isempty(fname)
+		    fname=get_file_filter(dname,['MID*',num2str(mid(imid)),'.raw',num2str(para.ste_acq_indx),'.svd']);
+                    %					end
+		else
+		    % restore the default >VB dname
+		    dname=['./meas_MID',num2str(mid(imid),'%05d'),'_recon/'];
+                    % Jiaen Liu 09/01/2026: run sort_siemens to generate the data, assuming the newer sort_siemens (after 2026) is used
                     cmd=['sort_siemens -filemode 0666 ' num2str(mid(imid))];
                     if system(cmd)~=0
                         error(['*** ',cmd,' was not successful! ***']);
                     end
-					fname=get_file_filter('.',['MID*',num2str(mid(imid)),'.steref.svd']);
+                    fname=get_file_filter(dname,['MID*',num2str(mid(imid)),'.raw',num2str(para.ste_acq_indx),'.svd']);
+		end
+                % finally test for really old data
+                % Jiaen Liu 09/01/2026: copied from Jacco's code. Not sure if the following is correct after so many changes ...
+            	if isempty(fname)
+		    fname=get_file_filter('.',['MID*',num2str(mid(imid)),'.steref.svd']); % legacy support for older data
                     if isempty(fname)
-        			    error(['*** ',fname,' still does not exist! ***']);
+                    	cmd=['sort_siemens -filemode 0666 ' num2str(mid(imid))];
+                    	if system(cmd)~=0
+                            error(['*** ',cmd,' was not successful! ***']);
+                    	end
+			if exist(dname)
+             		    fname=get_file_filter(dname,['MID*',num2str(mid(imid)),'.raw',num2str(para.ste_acq_indx),'.svd']);
+			else
+			    % 2026-02-23 JAdZ: Also support new recon of old (VB) data
+			    dname=['./meas_MID',num2str(mid(imid)),'_recon/'];
+			        if exist(dname)
+             			    fname=get_file_filter(dname,['MID*',num2str(mid(imid)),'.raw',num2str(para.ste_acq_indx),'.svd']);
+				else
+				    dname='./';
+				    fname=get_file_filter('.',['MID*',num2str(mid(imid)),'.nav.svd']);
+				end
+			end
+             		if isempty(fname)
+			    error(['*** ','MID*',num2str(mid(imid)),' still does not exist! ***']);
+			end
                     end
-    		    end
-            end
-            end
+		end
+	    end
             fnmdh=get_file_filter(dname,['MID*',num2str(mid(imid)),'.mdh']);
         end
-        if strcmp(vendor,'siemens')
-            d=read_data(fname);
+    end
+    if strcmp(vendor,'siemens')
+        d=read_data(fname);
+        mask_channel=ones(para.n_channels,1);
+        if ~isempty(mid_pimg)
+            para_b1=extract_para(mid_pimg);
+            idx_channel=[1:para.n_channels].';
+        else
+            idx_channel=[];
+        end
+        
+    elseif strcmp(vendor,'philips')
+        [d,pe,im_nav]=recon_bmir_nav3d(mid(imid));
+        para=extract_para_philips(mid(imid));
+        if ~isempty(mid_pimg)
+            para_b1=extract_para_philips(mid_pimg);
+            [idx_channel,mask_channel]=idx_channel_philips(para_b1,para);
+        else
+            idx_channel=[];
             mask_channel=ones(para.n_channels,1);
-            if ~isempty(mid_pimg)
-                para_b1=extract_para(mid_pimg);
-                idx_channel=[1:para.n_channels].';
-            else
-                idx_channel=[];
+        end
+    end
+    si=size(d);
+    necho_ste=si(2);
+    nshot=si(end);
+    ishot_ref=floor(nshot/2);
+    nr=para.steref_dim_r;
+    nr_os=nr*2;
+    nch=si(end-1);
+    nnav=0;
+    if para.b_nav_en
+        nnav = conditional(para.nav_type==0,1,para.nav_type);
+    end
+    necho_main=0;
+    for icontr=1:para.n_contrasts
+        necho_main=necho_main+...
+            (para.np/para.n_interleaves/para.sense_rate_p+para.n_refs(icontr));
+    end
+    % total echos in one shot
+    nechot = nnav+necho_ste+necho_main;
+    if strcmp(vendor,'siemens')
+        % read mdh;
+        if contains(para.idea_v,'VB','IgnoreCase',true)
+            mdh=defMDH17();
+            nByteMdh=size_of(mdh);
+            dmdh=read_raw(fnmdh,[nByteMdh,nch,nechot,nshot],'uint8',1);
+        elseif contains(para.idea_v,'VD','IgnoreCase',true) || ...
+                contains(para.idea_v,'VE','IgnoreCase',true)
+            mdh=defMDH11();
+            nByteMdh=size_of(mdh);
+            dmdh=read_raw(fnmdh,[nByteMdh,1,nechot,nshot],'uint8',1);
+        end
+        % STE pe encoding definition
+        if para.ste3d_mode==1 || para.ste3d_mode==0 || para.ste3d_mode==4
+            % defined by the sequence
+            if para.ste3d_mode==1 || para.ste3d_mode==4
+                % zig zag
+                % 09/07/2026, Jiaen Liu: fix issues related to how kyz is playout
+                % previous code
+                % nkyz= para.steref_dim_p*(para.steref_dim_s+1);
+                % new code
+                % an overestimate, nkyz will be determined later
+                nkyz= para.steref_dim_p*(para.steref_dim_s+5);
+            elseif para.ste3d_mode==0
+                % linear
+                error('*** Linear navigator encoding not supported by the reconstruction! ***');
+                nkyz= para.steref_dim_p*para.steref_dim_s;
             end
-            
-        elseif strcmp(vendor,'philips')
-            [d,pe,im_nav]=recon_bmir_nav3d(mid(imid));
-            para=extract_para_philips(mid(imid));
-            if ~isempty(mid_pimg)
-                para_b1=extract_para_philips(mid_pimg);
-                [idx_channel,mask_channel]=idx_channel_philips(para_b1,para);
-            else
-                idx_channel=[];
-                mask_channel=ones(para.n_channels,1);
-            end
-        end
-        si=size(d);
-        necho_ste=si(2);
-        nshot=si(end);
-        ishot_ref=floor(nshot/2);
-        nr=para.steref_dim_r;
-        nr_os=nr*2;
-        nch=si(end-1);
-        nnav=0;
-        if para.b_nav_en
-            nnav = conditional(para.nav_type==0,1,para.nav_type);
-        end
-        necho_main=0;
-        for icontr=1:para.n_contrasts
-            necho_main=necho_main+...
-                (para.np/para.n_interleaves/para.sense_rate_p+para.n_refs(icontr));
-        end
-        % total echos in one shot
-        nechot = nnav+necho_ste+necho_main;
-        if strcmp(vendor,'siemens')
-            % read mdh;
+            kyz=zeros(2,nkyz);
             if contains(para.idea_v,'VB','IgnoreCase',true)
-                mdh=defMDH17();
-                nByteMdh=size_of(mdh);
-                dmdh=read_raw(fnmdh,[nByteMdh,nch,nechot,nshot],'uint8',1);
-            elseif contains(para.idea_v,'VD','IgnoreCase',true) || ...
-                    contains(para.idea_v,'VE','IgnoreCase',true)
-                mdh=defMDH11();
-                nByteMdh=size_of(mdh);
-                dmdh=read_raw(fnmdh,[nByteMdh,1,nechot,nshot],'uint8',1);
-            end
-            % STE pe encoding definition
-            if para.ste3d_mode==1 || para.ste3d_mode==0 || para.ste3d_mode==4
-                % defined by the sequence
-                if para.ste3d_mode==1 || para.ste3d_mode==4
-                    % zig zag
-                    nkyz= para.steref_dim_p*(para.steref_dim_s+1);    
-                elseif para.ste3d_mode==0
-                    % linear
-                    error('*** Linear navigator encoding not supported by the reconstruction! ***');
-                    nkyz= para.steref_dim_p*para.steref_dim_s;
-                    
-                end
-                kyz=zeros(2,nkyz);
-                if contains(para.idea_v,'VB','IgnoreCase',true)
-                    % hard coded zigzap pattern for VB
-                    if para.ste3d_mode==1
-                        ds=1;
-                    elseif para.ste3d_mode==4
-                        ds=0;
-                    end
-                    kyz=[zeros(2,necho_ste),...
-                         gen_pe_sense(para.steref_dim_p,para.steref_dim_s,...
-                                      4,2,ds,0,0),...
-                         gen_pe_sense(para.steref_dim_p,para.steref_dim_s,...
-                                      4,2,ds,2,0),...
-                         zeros(2,necho_ste),...
-                         gen_pe_sense(para.steref_dim_p,para.steref_dim_s,...
-                                      4,2,ds,1,0),...
-                         gen_pe_sense(para.steref_dim_p,para.steref_dim_s,...
-                                      4,2,ds,3,0),...
-                         zeros(2,necho_ste),...
-                         gen_pe_sense(para.steref_dim_p,para.steref_dim_s,...
-                                      4,2,ds,0,1),...
-                         gen_pe_sense(para.steref_dim_p,para.steref_dim_s,...
-                                      4,2,ds,2,1),...
-                         zeros(2,necho_ste),...
-                         gen_pe_sense(para.steref_dim_p,para.steref_dim_s,...
-                                      4,2,ds,1,1),...
-                         gen_pe_sense(para.steref_dim_p,para.steref_dim_s,...
-                                      4,2,ds,3,1)];
-                else
-                    for itr=1:nkyz/necho_ste      
-                        for ie=1:necho_ste
-                            mdhtmp=cast2struct(dmdh(:,1,nnav+ie,itr+...
-                                                    para.n_noise_tr+...
-                                                    para.n_blipoff_tr),mdh);
-                            kyz(1,ie+ (itr-1)*necho_ste)= mdhtmp.ky;
-                            kyz(2,ie+ (itr-1)*necho_ste)= mdhtmp.kz;
-                        end
-                    end
-                    if min(kyz(1,:))>=0
-                        kyz(1,:)=kyz(1,:)-floor(para.steref_dim_p/2);
-                    end
-                    if min(kyz(2,:))>=0
-                        kyz(2,:)=kyz(2,:)-floor(para.steref_dim_s/2);
-                    end
-                end
-                pe= struct('hf',zeros(6,1,'single'),...
-                           'hl',zeros(2,1,'int32'),...
-                           'k',kyz);
-                pe.hl(1)=nkyz;
-                if para.ste3d_mode==1 || para.ste3d_mode==4
-                    pe.y_cyc=2;
-                    pe.z_cyc=1;
-                else
-                    pe.y_cyc=0;
-                    pe.z_cyc=0;
-                end
-                pe.r=8;
-                pe.sp=4;
+                % hard coded zigzap pattern for VB
                 if para.ste3d_mode==1
-                    pe.dkz=1;
+                    ds=1;
                 elseif para.ste3d_mode==4
-                    pe.dkz=0;
+                    ds=0;
                 end
-                pe.blipless=2;
-                pe.ncontr=necho_ste/para.n_echo_steref;    
+                kyz=[zeros(2,necho_ste),...
+                     gen_pe_sense(para.steref_dim_p,para.steref_dim_s,...
+                                  4,2,ds,0,0),...
+                     gen_pe_sense(para.steref_dim_p,para.steref_dim_s,...
+                                  4,2,ds,2,0),...
+                     zeros(2,necho_ste),...
+                     gen_pe_sense(para.steref_dim_p,para.steref_dim_s,...
+                                  4,2,ds,1,0),...
+                     gen_pe_sense(para.steref_dim_p,para.steref_dim_s,...
+                                  4,2,ds,3,0),...
+                     zeros(2,necho_ste),...
+                     gen_pe_sense(para.steref_dim_p,para.steref_dim_s,...
+                                  4,2,ds,0,1),...
+                     gen_pe_sense(para.steref_dim_p,para.steref_dim_s,...
+                                  4,2,ds,2,1),...
+                     zeros(2,necho_ste),...
+                     gen_pe_sense(para.steref_dim_p,para.steref_dim_s,...
+                                  4,2,ds,1,1),...
+                     gen_pe_sense(para.steref_dim_p,para.steref_dim_s,...
+                                  4,2,ds,3,1)];
+                nkyz=size(kyz,2);
             else
-                % pe file
-                pe_str=typecast(int32(para.ste3d_mode),'uint8');
-                pe_str=char(pe_str(1:2));
-                pe_file=get_file_filter(pe_path,['pe3d_',pe_str,'_*',...
-                                    num2str(necho_ste),'.flt']);
-                if ~strcmp(class(pe_file),'char') && numel(pe_file)~=1
-                    error('*** The pe_file name is not correct! ***');
+                for itr=1:nkyz/necho_ste      
+                    for ie=1:necho_ste
+                        mdhtmp=cast2struct(dmdh(:,1,nnav+ie,itr+...
+                                                para.n_noise_tr+...
+                                                para.n_blipoff_tr),mdh);
+                        kyz(1,ie+ (itr-1)*necho_ste)= mdhtmp.ky;
+                        kyz(2,ie+ (itr-1)*necho_ste)= mdhtmp.kz;
+                    end
                 end
-                pe=read_pe_files(fullfile(pe_path,pe_file));
+                if min(kyz(1,:))>=0
+                    kyz(1,:)=kyz(1,:)-floor(para.steref_dim_p/2);
+                end
+                if min(kyz(2,:))>=0
+                    kyz(2,:)=kyz(2,:)-floor(para.steref_dim_s/2);
+                end
+                % find the cycle in kyz
+                mask_kyz_nz=all(kyz~=0,1);
+                idx_kyz_nz=find(mask_kyz_nz);
+                idx_kyz_repeat=find(all(kyz(:,idx_kyz_nz(1))==kyz,1));
+                if numel(idx_kyz_repeat)>1
+                    nkyz=idx_kyz_repeat(2)-idx_kyz_repeat(1);
+                    kyz=kyz(:,1:nkyz);
+                end
             end
-        elseif strcmp(vendor,'philips')
-            % pe define
-            pe_strt.y_cyc=0;
-            pe_strt.z_cyc=0;
-            pe_strt.blipless=2;
-            pe_strt.sp=para.steref_s1;
-            r=para.steref_s1*para.steref_s2;
-            pe_strt.r=r;
-            pe_strt.dkz=floor(para.steref_s2/2);
-            pe_strt.ncontr=necho_ste/para.n_echo_steref;
-            n_shot_fast_nav3d=para.steref_dim_s/para.steref_s2+1;
-            n_shot_full_nav3d=n_shot_fast_nav3d*r;
-            pe_strt.k=pe(:,1:n_shot_full_nav3d*necho_ste);
-            pe_strt.hl=int32([n_shot_full_nav3d*necho_ste,0]);
-            pe=pe_strt;
-        end
-        % readout direction and te of short reference
-        ro_pol=zeros(necho_ste,1);
-        te=zeros(necho_ste,1);
-        if strcmp(vendor,'siemens')
-            for ie=1:necho_ste
-                mdhtmp=cast2struct(dmdh(:,1,nnav+ie,1),mdh);
-                % refer to !SIEMENS_EVALINFOMASK
-                % DEFINE_EVALINFOMASK in EVALINFOMASK_BITS.pro
-                ro_pol(ie)=evalmaskbit(mdhtmp,25);
-                te(ie)=mdhtmp.te;
-            end
-            % reverse the data for negative readouts
-            d(:,find(ro_pol==0),:,:,:)=flipdim(d(:,find(ro_pol==0),:,:,:),1);
-        else
-            ro_pol(1:2:end)=1;
-            te=para.te_ste(:);
-        end
-        % regridding
-        % for Philips, there is no ramp sampling
-        if para.ste_rsamp> 0.01
-            % ramp sampling
-            mdhtmp=cast2struct(dmdh(:,1,nnav+1,1),mdh);
-            para_rsamp=struct('nr',para.steref_dim_r,...
-                              't_dwell',para.t_dwell_ste,...
-                              'ramp_dur',mdhtmp.ramp,...
-                              'ramp_samp_frac',para.ste_rsamp,...
-                              'nr_os',para.steref_dim_r*2.0);
-            d=regridding_arr(d,para_rsamp,apodization);
-        else
-            if apodization~=-1
-                d=apodize_arr(d,apodization,1);
-            end
-            d=fftmr(d,-1,1);
-        end
-        if strcmp(vendor,'siemens')
-            d=d(idx_truncate(nr_os,nr),:,:,:,:);
-        end
-        % remove noise scan
-        if strcmp(vendor,'siemens')
-            if para.n_noise_shots>0
-                d=d(:,:,:,:,para.n_noise_tr+1:end);
-                nshot=nshot-para.n_noise_tr;
-            end
-            % remove blipoff scans
-            if para.n_blipoff_reps>0
-                n_shot_blipoff=para.n_blipoff_tr;
-                d=d(:,:,:,:,n_shot_blipoff+1:end);
-                nshot=nshot-n_shot_blipoff;
+            pe= struct('hf',zeros(6,1,'single'),...
+                       'hl',zeros(2,1,'int32'),...
+                       'k',kyz);
+            pe.hl(1)=nkyz;
+            if para.ste3d_mode==1 || para.ste3d_mode==4
+                pe.y_cyc=2;
+                pe.z_cyc=1;
             else
-                n_shot_blipoff=0;
+                pe.y_cyc=0;
+                pe.z_cyc=0;
             end
-        end
-        if strcmp(vendor,'siemens')
-            d=reshape(d(:,:,1,:,:),[nr,necho_ste, nch, nshot]);
-        end
-        if strcmp(vendor,'siemens')
-            % odd-even phase different correction
-            if ~no_pc
-                d=pha_crct_ste(d,pe,nstd_pc,frac_pc);
+            % 09/07/2026, Jiaen Liu: changed the fixed parameters to wip data
+            % pe.r=8;
+            % pe.sp=4;
+            pe.sp=para.n_interleaves_steref;
+            pe.r=pe.sp*2;
+            
+            if para.ste3d_mode==1
+                pe.dkz=1;
+            elseif para.ste3d_mode==4
+                pe.dkz=0;
             end
+            pe.blipless=2;
+            pe.ncontr=necho_ste/para.n_echo_steref;    
+        else
+            % pe file
+            pe_str=typecast(int32(para.ste3d_mode),'uint8');
+            pe_str=char(pe_str(1:2));
+            pe_file=get_file_filter(pe_path,['pe3d_',pe_str,'_*',...
+                                             num2str(necho_ste),'.flt']);
+            if ~strcmp(class(pe_file),'char') && numel(pe_file)~=1
+                error('*** The pe_file name is not correct! ***');
+            end
+            pe=read_pe_files(fullfile(pe_path,pe_file));
         end
-        % transform to k-space
-        d=fftmr(d,1,1);
-        % correct TE shift-caused eddy current
-        % experimental, not working so far
+    elseif strcmp(vendor,'philips')
+        % pe define
+        pe_strt.y_cyc=0;
+        pe_strt.z_cyc=0;
+        pe_strt.blipless=2;
+        pe_strt.sp=para.steref_s1;
+        r=para.steref_s1*para.steref_s2;
+        pe_strt.r=r;
+        pe_strt.dkz=floor(para.steref_s2/2);
+        pe_strt.ncontr=necho_ste/para.n_echo_steref;
+        n_shot_fast_nav3d=para.steref_dim_s/para.steref_s2+1;
+        n_shot_full_nav3d=n_shot_fast_nav3d*r;
+        pe_strt.k=pe(:,1:n_shot_full_nav3d*necho_ste);
+        pe_strt.hl=int32([n_shot_full_nav3d*necho_ste,0]);
+        pe=pe_strt;
+    end
+    % readout direction and te of short reference
+    ro_pol=zeros(necho_ste,1);
+    te=zeros(necho_ste,1);
+    if strcmp(vendor,'siemens')
+        for ie=1:necho_ste
+            mdhtmp=cast2struct(dmdh(:,1,nnav+ie,1),mdh);
+            % refer to !SIEMENS_EVALINFOMASK
+            % DEFINE_EVALINFOMASK in EVALINFOMASK_BITS.pro
+            ro_pol(ie)=evalmaskbit(mdhtmp,25);
+            te(ie)=mdhtmp.te;
+        end
+        % reverse the data for negative readouts
+        d(:,find(ro_pol==0),:,:,:)=flipdim(d(:,find(ro_pol==0),:,:,:),1);
+    else
+        ro_pol(1:2:end)=1;
+        te=para.te_ste(:);
+    end
+    % regridding
+    % for Philips, there is no ramp sampling
+    if para.ste_rsamp> 0.01
+        % ramp sampling
+        mdhtmp=cast2struct(dmdh(:,1,nnav+1,1),mdh);
+        para_rsamp=struct('nr',para.steref_dim_r,...
+                          't_dwell',para.t_dwell_ste,...
+                          'ramp_dur',mdhtmp.ramp,...
+                          'ramp_samp_frac',para.ste_rsamp,...
+                          'nr_os',para.steref_dim_r*2.0);
+        d=regridding_arr(d,para_rsamp,apodization);
+    else
+        if apodization~=-1
+            d=apodize_arr(d,apodization,1);
+        end
+        d=fftmr(d,-1,1);
+    end
+    if strcmp(vendor,'siemens')
+        d=d(idx_truncate(nr_os,nr),:,:,:,:);
+    end
+    % remove noise scan
+    if strcmp(vendor,'siemens')
+        if para.n_noise_shots>0
+            d=d(:,:,:,:,para.n_noise_tr+1:end);
+            nshot=nshot-para.n_noise_tr;
+        end
+        % remove blipoff scans
+        if para.n_blipoff_reps>0
+            n_shot_blipoff=para.n_blipoff_tr;
+            d=d(:,:,:,:,n_shot_blipoff+1:end);
+            nshot=nshot-n_shot_blipoff;
+        else
+            n_shot_blipoff=0;
+        end
+    end
+    if strcmp(vendor,'siemens')
+        d=reshape(d(:,:,1,:,:),[nr,necho_ste, nch, nshot]);
+    end
+    if strcmp(vendor,'siemens')
+        % odd-even phase different correction
+        if ~no_pc
+            d=pha_crct_ste(d,pe,nstd_pc,frac_pc);
+        end
+    end
+    % transform to k-space
+    d=fftmr(d,1,1);
+    % correct TE shift-caused eddy current
+    % experimental, not working so far
 % $$$       if para.int_te_shift
 % $$$           d=steTESClean(d,double(para.n_interleaves),...
 % $$$               reshape(pe.k,[2,pe.hl(1)]),para.tr);
 % $$$       end
 % correct fov shift
-        if strcmp(vendor,'siemens')
-            d=fov_crct_ste(d,pe.k,para);
+    if strcmp(vendor,'siemens')
+        d=fov_crct_ste(d,pe.k,para);
+    end
+    if strcmp(vendor,'siemens')
+        % calculate covariance matrix
+        cov_mat=covSiem(mid(imid));
+    elseif strcmp(vendor,'philips')
+        if sense_philips
+            % this is rare
+            % para_b1.channel_id=para_b1.channel_id(3:end);
+            para_b1.channel_id=para_b1.channel_id(idx_channel);
+            para_b1.n_channels=length(para_b1.channel_id);
+            para_b1.n_slices=1;
         end
-        if strcmp(vendor,'siemens')
-            % calculate covariance matrix
-            cov_mat=covSiem(mid(imid));
-        elseif strcmp(vendor,'philips')
-            if sense_philips
-                % this is rare
-                % para_b1.channel_id=para_b1.channel_id(3:end);
-                para_b1.channel_id=para_b1.channel_id(idx_channel);
-                para_b1.n_channels=length(para_b1.channel_id);
-                para_b1.n_slices=1;
-            end
 % $$$             idx_channel=zeros(length(para.channel_id),1);
 % $$$             for i=1:length(para.channel_id)
 % $$$                 tmp=find(para_b1.channel_id==...
@@ -365,173 +411,171 @@ function s=prep_ste(mid,varargin)
 % $$$                     idx_channel(i)=tmp;
 % $$$                 end
 % $$$             end
-            n=read_raw_philips(mid(imid),'type',5);
-            % n=n(:,find(idx_channel~=-1));
-            n=n(:,find(mask_channel));
-            para.n_channels=total(mask_channel);
-            cov_mat=cov(conj(n));
+        n=read_raw_philips(mid(imid),'type',5);
+        % n=n(:,find(idx_channel~=-1));
+        n=n(:,find(mask_channel));
+        para.n_channels=total(mask_channel);
+        cov_mat=cov(conj(n));
+    end
+    if strcmp(vendor,'siemens')
+        if ~contains(para.idea_v,'VB','IgnoreCase',true)
+            % get ky and kz for main acquisition
+            kyz=zeros(2,necho_main,nshot);
+            for i=1:nshot
+                for j=1:necho_main
+                    mdhtmp=cast2struct(dmdh(:,1,nnav+necho_ste+j,...
+                                            i+n_shot_blipoff+para.n_noise_tr),...
+                                       mdh);
+                    kyz(1,j,i)=mdhtmp.ky;
+                    kyz(2,j,i)=mdhtmp.kz;
+                end
+            end
+            if min(col(kyz(1,:,:)))>=0
+                kyz(1,:,:)=kyz(1,:,:)-floor(para.np/2);
+            end
+            if min(col(kyz(2,:,:)))>=0
+                kyz(2,:,:)=kyz(2,:,:)-floor(para.n_partitions/2);
+            end
+        else
+            kyz=[];
+        end
+    elseif strcmp(vendor,'philips')
+        kyz=get_pe_philips(mid(imid),'type',1,'mix',0);
+    end
+    %
+    para.n_channels=total(mask_channel);
+    s=struct('d',d(:,:,find(mask_channel),:),...
+             'pe',pe,...
+             'ro_pol',ro_pol,...
+             'te',te,...
+             'para',para,...
+             'cov_mat',cov_mat,...
+             'ishot_ref',ishot_ref,...
+             'kyz',kyz,...
+             'version',version,...
+             'vendor',vendor);
+    % remove average B0 in STE
+    if strcmp(vendor,'philips')
+        regr_order=20;
+    end
+    if regr_order==0
+        par_regress.enable=0;
+        par_regress.order=0;
+    else
+        par_regress.enable=1;
+        par_regress.order=regr_order;
+    end
+    % remove global B0 fluctuation in navigator
+    s=detrend_ste(s,ishot_ref,par_regress);
+    % process parallel imaging reference data
+    if ~isempty(mid_pimg)
+        for imid_pimg=1:length(mid_pimg)
+            if strcmp(vendor,'siemens')
+                % para_pimg_tmp=extract_para(mid_pimg(imid_pimg));
+                k_pimg_tmp=squeeze(recon_amri_epi(mid_pimg(imid_pimg),'k_return',1));
+            elseif strcmp(vendor,'philips')
+                % para_pimg_tmp=extract_para_philips(mid_pimg(imid_pimg));
+                if ~sense_philips
+                    k_pimg_tmp=squeeze(recon_bmir_epi(mid_pimg(imid_pimg)));
+                else
+                    % this is rare
+                    k_pimg_tmp=sense_ref_philips(mid_pimg(imid_pimg));
+                end
+                % nx x np x nslice x nch x necho
+                k_pimg_tmp=k_pimg_tmp(:,:,:,idx_channel,:);
+                if para_b1.dimen==3 && ~sense_philips
+                    error('*** 3D SENSE ref scan is not supported! ***');
+                end
+                k_pimg_tmp=fftmr(k_pimg_tmp,1,[1:para_b1.dimen]);
+                para_b1.n_channels=length(idx_channel);
+            end
+            field_name=['mid',...
+                        int2str(mid_pimg(imid_pimg))];
+            if imid_pimg==1
+                k_pimg=struct(field_name,k_pimg_tmp);
+                para_pimg=struct(field_name,para_b1);
+            else
+                k_pimg.(field_name)=k_pimg_tmp;
+                para_pimg.(field_name)=para_b1;
+            end
+        end
+        s.mid_pimg=mid_pimg;
+        s.k_pimg=k_pimg;
+        s.para_pimg=para_pimg;
+        if sense_philips
+            % use sense ref from philips for recon
+            % this is rare
+            s.sense_philips=1;
+        end
+    end
+    % save data
+    if ~no_save
+        save_data(fn_out,s);
+        file_permission(fn_out,'+rw','ugo');
+    end
+    % prepare main acqusition
+    if ~no_main
+        if no_b0_main
+            fn_main=rp(['mid',num2str(mid(imid)),...
+                        '.k_nnav_uncomb.svd']);
+        else
+            fn_main=rp(['mid',num2str(mid(imid)),...
+                        '.k_nav0_uncomb.svd']);
         end
         if strcmp(vendor,'siemens')
-            if ~contains(para.idea_v,'VB','IgnoreCase',true)
-                % get ky and kz for main acquisition
-                kyz=zeros(2,necho_main,nshot);
-                for i=1:nshot
-                    for j=1:necho_main
-                        mdhtmp=cast2struct(dmdh(:,1,nnav+necho_ste+j,...
-                                                i+n_shot_blipoff+para.n_noise_tr),...
-                                           mdh);
-                        kyz(1,j,i)=mdhtmp.ky;
-                        kyz(2,j,i)=mdhtmp.kz;
-                    end
-                end
-                if min(col(kyz(1,:,:)))>=0
-                    kyz(1,:,:)=kyz(1,:,:)-floor(para.np/2);
-                end
-                if min(col(kyz(2,:,:)))>=0
-                    kyz(2,:,:)=kyz(2,:,:)-floor(para.n_partitions/2);
-                end
+            disp('*** Processing the main GRE/EPI data ***');
+            if ~isempty(mid_blpo)
+                kmain=recon_amri_epi(mid(imid),'k_return',1,'mid_blpo',mid_blpo,...
+                                     'no_b0_crct',no_b0_main,'ste',s);
             else
-                kyz=[];
+                kmain=recon_amri_epi(mid(imid),'k_return',1,...
+                                     'no_b0_crct',no_b0_main,'ste',s);
             end
+            kmain=kmain(:,:,:,:,find(mask_channel),:);
         elseif strcmp(vendor,'philips')
-            kyz=get_pe_philips(mid(imid),'type',1,'mix',0);
-        end
-        %
-        para.n_channels=total(mask_channel);
-        s=struct('d',d(:,:,find(mask_channel),:),...
-                 'pe',pe,...
-                 'ro_pol',ro_pol,...
-                 'te',te,...
-                 'para',para,...
-                 'cov_mat',cov_mat,...
-                 'ishot_ref',ishot_ref,...
-                 'kyz',kyz,...
-                 'version',version,...
-                 'vendor',vendor);
-        % remove average B0 in STE
-        if strcmp(vendor,'philips')
-            regr_order=20;
-        end
-        if regr_order==0
-            par_regress.enable=0;
-            par_regress.order=0;
-        else
-            par_regress.enable=1;
-            par_regress.order=regr_order;
-        end
-        % remove global B0 fluctuation in navigator
-        s=detrend_ste(s,ishot_ref,par_regress);
-        % process parallel imaging reference data
-        if ~isempty(mid_pimg)
-            for imid_pimg=1:length(mid_pimg)
-                if strcmp(vendor,'siemens')
-                    % para_pimg_tmp=extract_para(mid_pimg(imid_pimg));
-                    k_pimg_tmp=squeeze(recon_amri_epi(mid_pimg(imid_pimg),'k_return',1));
-                elseif strcmp(vendor,'philips')
-                    % para_pimg_tmp=extract_para_philips(mid_pimg(imid_pimg));
-                    if ~sense_philips
-                        k_pimg_tmp=squeeze(recon_bmir_epi(mid_pimg(imid_pimg)));
-                    else
-                        % this is rare
-                        k_pimg_tmp=sense_ref_philips(mid_pimg(imid_pimg));
-                    end
-                    % nx x np x nslice x nch x necho
-                    k_pimg_tmp=k_pimg_tmp(:,:,:,idx_channel,:);
-                    if para_b1.dimen==3 && ~sense_philips
-                        error('*** 3D SENSE ref scan is not supported! ***');
-                    end
-                    k_pimg_tmp=fftmr(k_pimg_tmp,1,[1:para_b1.dimen]);
-                    para_b1.n_channels=length(idx_channel);
-                end
-                field_name=['mid',...
-                            int2str(mid_pimg(imid_pimg))];
-                if imid_pimg==1
-                    k_pimg=struct(field_name,k_pimg_tmp);
-                    para_pimg=struct(field_name,para_b1);
+            % recon_bmir_epi doesn't perform B0 correction
+            kmain=recon_bmir_epi(mid(imid),'k_return',1);
+            kmain=kmain(:,:,:,find(mask_channel),:);
+            % b0 correction
+            if ~no_b0_main
+                df=s.df_shot;
+                if para.isgre
+                    % gre
+                    te=para.te_contr(:)*1e-3;
+                    dp=2*pi*te.*df(:).';
+                    dp=reshape(dp,[1,length(te),1,1,length(df)]);
                 else
-                    k_pimg.(field_name)=k_pimg_tmp;
-                    para_pimg.(field_name)=para_b1;
-                end
-            end
-            s.mid_pimg=mid_pimg;
-            s.k_pimg=k_pimg;
-            s.para_pimg=para_pimg;
-            if sense_philips
-                % use sense ref from philips for recon
-                % this is rare
-                s.sense_philips=1;
-            end
-        end
-        % save data
-        if ~no_save
-            save_data(fn_out,s);
-            file_permission(fn_out,'+rw','ugo');
-        end
-        % prepare main acqusition
-        if ~no_main
-            if no_b0_main
-                fn_main=rp(['mid',num2str(mid(imid)),...
-                            '.k_nnav_uncomb.svd']);
-            else
-                fn_main=rp(['mid',num2str(mid(imid)),...
-                            '.k_nav0_uncomb.svd']);
-            end
-            if strcmp(vendor,'siemens')
-                disp('*** Processing the main GRE/EPI data ***');
-                if ~isempty(mid_blpo)
-                    kmain=recon_amri_epi(mid(imid),'k_return',1,'mid_blpo',mid_blpo,...
-                                         'no_b0_crct',no_b0_main,'ste',s);
-                else
-                    kmain=recon_amri_epi(mid(imid),'k_return',1,...
-                                         'no_b0_crct',no_b0_main,'ste',s);
-                end
-                kmain=kmain(:,:,:,:,find(mask_channel),:);
-            elseif strcmp(vendor,'philips')
-                % recon_bmir_epi doesn't perform B0 correction
-                kmain=recon_bmir_epi(mid(imid),'k_return',1);
-                kmain=kmain(:,:,:,find(mask_channel),:);
-                % b0 correction
-                if ~no_b0_main
-                    df=s.df_shot;
-                    if para.isgre
-                        % gre
-                        te=para.te_contr(:)*1e-3;
-                        dp=2*pi*te.*df(:).';
-                        dp=reshape(dp,[1,length(te),1,1,length(df)]);
+                    % epi, echo shifting
+                    % 1. base line echo time for each line
+                    te=para.te_ro(:)-para.te+para.te_contr(:).';
+                    te=te(:)*1e-3;
+                    % 2. consider the order how echo time shift
+                    n_interl=para.n_interleaves;
+                    necho=length(para.te_contr);
+                    nshot=length(df);
+                    if isfield(para,'pe_order') && strcmp(para.pe_order,'rev_linear')
+                        % for philips, the pe order can be reversed
+                        te=te+...
+                           [n_interl-1:-1:0]*...
+                           para.echo_spacing*1e-6/n_interl*para.int_te_shift;
                     else
-                        % epi, echo shifting
-                        % 1. base line echo time for each line
-                        te=para.te_ro(:)-para.te+para.te_contr(:).';
-                        te=te(:)*1e-3;
-                        % 2. consider the order how echo time shift
-                        n_interl=para.n_interleaves;
-                        necho=length(para.te_contr);
-                        nshot=length(df);
-                        if isfield(para,'pe_order') && strcmp(para.pe_order,'rev_linear')
-                            % for philips, the pe order can be reversed
-                            te=te+...
-                               [n_interl-1:-1:0]*...
-                               para.echo_spacing*1e-6/n_interl*para.int_te_shift;
-                        else
-                            te=te+...
-                               [0:n_interl-1]*...
-                               para.echo_spacing*1e-6/n_interl*para.int_te_shift;
-                        end
-                        n_par_rep=para.n_partitions/para.sense_rate_s*para.n_reps;
-                        if isfield(para,'loop_order') && strcmp(para.loop_order,'zy_order')
-                            te=repmat(te,[n_par_rep,1]);
-                        else
-                            te=repmat(te,[1,n_par_rep]);
-                        end
-                        te=reshape(te,[1,para.nk_shot*necho,1,1,nshot]);
-                        dp=2*pi*te.*reshape(df,[1,1,1,1,nshot]);
+                        te=te+...
+                           [0:n_interl-1]*...
+                           para.echo_spacing*1e-6/n_interl*para.int_te_shift;
                     end
-                    kmain=kmain./exp(1i*dp);
+                    n_par_rep=para.n_partitions/para.sense_rate_s*para.n_reps;
+                    if isfield(para,'loop_order') && strcmp(para.loop_order,'zy_order')
+                        te=repmat(te,[n_par_rep,1]);
+                    else
+                        te=repmat(te,[1,n_par_rep]);
+                    end
+                    te=reshape(te,[1,para.nk_shot*necho,1,1,nshot]);
+                    dp=2*pi*te.*reshape(df,[1,1,1,1,nshot]);
                 end
+                kmain=kmain./exp(1i*dp);
             end
-            save_data(fn_main,single(kmain));
-            file_permission(fn_main,'+rw','ugo');
         end
-
+        save_data(fn_main,single(kmain));
+        file_permission(fn_main,'+rw','ugo');
     end
 end

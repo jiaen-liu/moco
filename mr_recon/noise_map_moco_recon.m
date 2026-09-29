@@ -12,10 +12,10 @@ function [noise,mag_noise]=noise_map_moco_recon(b1,cov_mat,para,para_b1,downsamp
     para.resp=para.resp*downsample(2);
     para.ress=para.ress*downsample(3);
     
-    para.nr=para.nr/downsample(1);
-    para.np=para.np/downsample(2);
-    para.n_partitions=para.n_partitions/downsample(3);
-    para.n_partitions_nos=para.n_partitions_nos/downsample(3);
+    para.nr=round(para.nr/downsample(1));
+    para.np=round(para.np/downsample(2));
+    para.n_partitions=round(para.n_partitions/downsample(3));
+    para.n_partitions_nos=round(para.n_partitions_nos/downsample(3));
     if para.n_slices>1
         error('Multi-slice acquisition is not supported!');
     end

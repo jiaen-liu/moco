@@ -43,7 +43,7 @@ function [dnav,pe,im_nav]=recon_bmir_nav3d(mid,varargin)
     py=py(:);
     pz=pz(:);
     pe=[py.';pz.'];
-    [dnav,hnav]=read_raw_philips(mid,'mix',1,'type',1);
+    [dnav,hnav]=read_raw_philips(mid,'is_nav3d',1,'type',1);
     dnav=reshape(dnav,[nrnav,nch,nechonav,nshot]);
     % reformat to nrnav,nechonav,nch,nshot
     dnav=permute(dnav,[1,3,2,4]);

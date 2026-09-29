@@ -5,29 +5,36 @@ function [y,para,l,cov_mat]=recon_bmir_epi(mid,varargin)
     k_return=0;
 % $$$     no_comb=0;
     no_pc=0;
-    no_fov_crct=0;
     ord_pha_crct=2;
+    frac_pha_crct=0.3;
+    no_fov_crct=0;
 % $$$     mid_b1=[];
     mix=0;
     b0_crct=0;
+    disable_lq_recon=0;
     addParameter(p,'apodiz',apodiz,@isnumeric);
     addParameter(p,'k_return',k_return,@isnumeric);
 % $$$     addParameter(p,'no_comb',no_comb,@isnumeric);
     addParameter(p,'no_pc',no_pc,@isnumeric);
-    addParameter(p,'no_fov_crct',no_fov_crct,@isnumeric);
     addParameter(p,'ord_pha_crct',ord_pha_crct,@isnumeric);
+    addParameter(p,'frac_pha_crct',frac_pha_crct,@isnumeric);
+    addParameter(p,'no_fov_crct',no_fov_crct,@isnumeric);
     addParameter(p,'mix',mix,@isnumeric);
     addParameter(p,'b0_crct',b0_crct,@isnumeric);
+    addParameter(p,'disable_lq_recon',disable_lq_recon,@isnumeric);
 % $$$     addParameter(p,'mid_b1',mid_b1,@isnumeric);
     p.parse(varargin{:});
     apodiz=p.Results.apodiz;
     k_return=p.Results.k_return;
 % $$$     no_comb=p.Results.no_comb;
     no_pc=p.Results.no_pc;
-    no_fov_crct=p.Results.no_fov_crct;
     ord_pha_crct=p.Results.ord_pha_crct;
+    frac_pha_crct=p.Results.frac_pha_crct;
+    no_fov_crct=p.Results.no_fov_crct;
+
     mix=p.Results.mix;
     b0_crct=p.Results.b0_crct;
+    disable_lq_recon=p.Results.disable_lq_recon;
 % $$$     mid_b1=p.Results.mid_b1;
     if k_return
         no_comb=1;
@@ -259,7 +266,7 @@ function [y,para,l,cov_mat]=recon_bmir_epi(mid,varargin)
                                       ie*nk_shot,idx(:,i),:,is);
                     dx_contr=pha_crct_epi(dx_contr,dblpo_contr,...
                                           para.ro_pol(:,ie),para.ro_pol(:,ie),...
-                                          ord_pha_crct,1);
+                                          ord_pha_crct,1,0,frac_pha_crct);
                     dx(:,(ie-1)*nk_shot+1:ie*nk_shot,is,idx(:,i),:)=dx_contr;
                 end
             end
@@ -312,6 +319,20 @@ function [y,para,l,cov_mat]=recon_bmir_epi(mid,varargin)
         % when done, dx is in image space
         dx=b0_crct_bmir_epi(dx,df0,para);
     end
+    %% LQ
+    if para.enable_lq && ~disable_lq_recon
+        if para.enable_gesse
+            necho_gre=length(para.te_contr)-para.n_echo_gesse;
+            necho_gesse=para.n_echo_gesse;
+            dx(:,1:necho_gre,:,:,:)=lq_recon(dx(:,1:necho_gre,:,:,:),-para.lq_bw,3);
+            dx(:,necho_gre+1:end,:,:,:)=lq_recon(dx(:,necho_gre+1:end,:,:,:),para.lq_bw,3);
+        elseif strcmp(para.img_seq,'FFE')
+            dx=lq_recon(dx,-para.lq_bw,3);
+        elseif strcmp(para.img_seq,'SE')
+            dx=lq_recon(dx,para.lq_bw,3);
+        end
+        dx=flipdim(dx,3);
+    end
     % return k-space data for later processing
     if k_return
         y=fftmr(dx,1,1);
@@ -324,30 +345,37 @@ function [y,para,l,cov_mat]=recon_bmir_epi(mid,varargin)
     kz=reshape(l.kz,[nk_shot,necho,ns,n_tr]);
     kymin=min(ky(:));
     kzmin=min(kz(:));
-    y=zeros(nr,nch,ns,necho,nps*npars,nreps);
+    y=zeros(nr,nch,ns,necho,nps*npars,n_delays,nreps);
     dx=reshape(dx,[nr,nk_shot,necho,ns,nch,n_tr]);
-    % nr x nch x ns x echo x npe x nreps
-    dx=permute(dx,[1,5,4,3,2,6]);
-    dx=reshape(dx,[nr,nch,ns,necho,npe,nreps]);
-    ky=permute(ky,[3,2,1,4]);
-    ky=reshape(ky,[ns,necho,npe,nreps]);
-    kz=permute(kz,[3,2,1,4]);
-    kz=reshape(kz,[ns,necho,npe,nreps]);
+    n_TR_rep=n_tr/tfe_factor/n_delays/nreps;
+    dx=reshape(dx,[nr,nk_shot,necho,ns,nch,tfe_factor,n_delays,n_TR_rep,nreps]);
+    ky=reshape(ky,[nk_shot,necho,ns,tfe_factor,n_delays,n_TR_rep,nreps]);
+    kz=reshape(kz,[nk_shot,necho,ns,tfe_factor,n_delays,n_TR_rep,nreps]);
+    % nr x nch x ns x echo x npe x n_delays x nreps
+    dx=permute(dx,[1,5,4,3,2,6,8,7,9]);
+    dx=reshape(dx,[nr,nch,ns,necho,npe,n_delays,nreps]);
+    % ns x necho x npe x ndelay x nrep
+    ky=permute(ky,[3,2,1,4,6,5,7]);
+    kz=permute(kz,[3,2,1,4,6,5,7]);
+    ky=reshape(ky,[ns,necho,npe,n_delays,nreps]);
+    kz=reshape(kz,[ns,necho,npe,n_delays,nreps]);
     % reorder phase encoded lines
     for irep=1:nreps
-        for iecho=1:necho
-            for is=1:ns
-                ipe1=ky(is,iecho,:,irep)-kymin+1;
-                ipe2=kz(is,iecho,:,irep)-kzmin+1;
-                ipe=ipe1+(ipe2-1)*nps;
-                ipe=ipe(:);
-                y(:,:,is,iecho,ipe,irep)=...
-                    dx(:,:,is,iecho,:,irep);
+        for idelay=1:n_delays
+            for iecho=1:necho
+                for is=1:ns
+                    ipe1=ky(is,iecho,:,idelay,irep)-kymin+1;
+                    ipe2=kz(is,iecho,:,idelay,irep)-kzmin+1;
+                    ipe=ipe1+(ipe2-1)*nps;
+                    ipe=ipe(:);
+                    y(:,:,is,iecho,ipe,idelay,irep)=...
+                        dx(:,:,is,iecho,:,idelay,irep);
+                end
             end
         end
     end
-    y=reshape(y,[nr,nch,ns,necho,nps,npars,nreps]);
-    % nr, npe1, npe2, ns, nch, necho, nreps
-    y=permute(y,[1,5,6,3,2,4,7]);
+    y=reshape(y,[nr,nch,ns,necho,nps,npars,n_delays,nreps]);
+    % nr, npe1, npe2, ns, nch, necho, ndelay, nreps
+    y=permute(y,[1,5,6,3,2,4,7,8]);
     y=fftmr(y,-1,[2,3]);
 end

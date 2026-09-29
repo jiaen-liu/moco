@@ -1,27 +1,34 @@
-function [data,label]=read_raw_philips(mid,varargin)
+function [data,label,para]=read_raw_philips(mid,varargin)
 % use reconframe
 % type: 1: image data, 3, phase correction, 5, noise data
-% mix: 0: regular data, 1: 3d navigator
+% mix: 0: regular data, 1: 3d navigator;
+% mix: in case of afi scans, mix 0 and 1 are for the two interleaved TRs
     type=1;
     mix=0;
     corr_half_fov=0;
+    is_nav3d=0;
     p=inputParser;
     addParameter(p,'type',type,@isnumeric);
     addParameter(p,'mix',mix,@isnumeric);
     addParameter(p,'corr_half_fov',corr_half_fov,@isnumeric);
+    addParameter(p,'is_nav3d',is_nav3d,@(x)(isnumeric(x)||islogical(x)));
     p.parse(varargin{:});
     type=p.Results.type;
     mix=p.Results.mix;
     corr_half_fov=p.Results.corr_half_fov;
+    is_nav3d=p.Results.is_nav3d;
+    if is_nav3d
+        mix=1;
+    end
     r=MRecon(mid2filename_philips(mid));
     r.Parameter.Parameter2Read.typ=type;
     r.Parameter.Parameter2Read.mix=mix;
     r.ReadData;
-    if mix==0
+    if ~is_nav3d
         r.DcOffsetCorrection;
     end
     r.PDACorrection;
-    if mix~=1
+    if ~is_nav3d
         r.RandomPhaseCorrection;
     end
     r.MeasPhaseCorrection;

@@ -6,7 +6,7 @@ function par=readFilePar(fn)
 % $$$     $ninv 3 4 // comment
 % $$$     $c 4
 % $$$     $d %Name
-    
+% $$$     $e #[0.1:0.1:0.5].'*1e-3
 % $$$     gives
     
 % $$$     par = 
@@ -18,6 +18,10 @@ function par=readFilePar(fn)
 % $$$     ninv: [3 4]
 % $$$        c: 4
 % $$$        d: 'Name'
+% $$$        e: [0.1:0.1:0.5].'*1e-3
+
+    %% important
+    % space is counted as a separator. Avoid using space if not necessary
     if ~exist(fn)
         error('*** File doesn''t exist! ***');
     end
@@ -32,7 +36,10 @@ function par=readFilePar(fn)
             par=setfield(par,varName,[]);
         elseif strcmp(c{i}(1),'%')
             par.(varName)=c{i}(2:end);
+        elseif strcmp(c{i}(1),'#')
+            par.(varName)=eval(c{i}(2:end));
         else
+            % number
             par.(varName)=[par.(varName),str2num(c{i})];
         end
     end

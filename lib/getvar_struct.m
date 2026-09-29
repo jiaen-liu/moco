@@ -1,4 +1,7 @@
 function getvar_struct(astruct,varargin)
+    if isempty(astruct)
+        return;
+    end
     nvarargin=numel(varargin);
     if nvarargin > 0
         fldn=varargin;

@@ -1,4 +1,4 @@
-function d=pha_crct_epi(d,dblpo,ro_pol,ref_pol,ord,pc_by_echo,single_side)
+function d=pha_crct_epi(d,dblpo,ro_pol,ref_pol,ord,pc_by_echo,single_side,frac)
     if isempty(dblpo)
         d=d;
         return;
@@ -17,6 +17,9 @@ function d=pha_crct_epi(d,dblpo,ro_pol,ref_pol,ord,pc_by_echo,single_side)
     if nargin<7
         single_side=0;
     end
+    if nargin<8
+        frac=0.3;
+    end
     [nr,necho,ns,nch,ntr]=size(d);
     if necho<3
         pc_by_echo=0;
@@ -27,17 +30,17 @@ function d=pha_crct_epi(d,dblpo,ro_pol,ref_pol,ord,pc_by_echo,single_side)
         for iepc=1:necho
             if iepc==1
                 dblpl_tmp=dblpo(:,1:3,:,:);
-                [pha(:,iepc),c(:,iepc)]=dpOddEven(dblpl_tmp,ord);
+                [pha(:,iepc),c(:,iepc)]=dpOddEven(dblpl_tmp,ord,frac);
             elseif iepc==necho
                 dblpl_tmp=dblpo(:,necho-2:necho,:,:);
-                [pha(:,iepc),c(:,iepc)]=dpOddEven(dblpl_tmp,ord);
+                [pha(:,iepc),c(:,iepc)]=dpOddEven(dblpl_tmp,ord,frac);
                 if mod(iepc-2,2)==0
                     pha(:,iepc)=-pha(:,iepc);
                     c(:,iepc)=-c(:,iepc);
                 end
             else
                 dblpl_tmp=dblpo(:,iepc-1:iepc+1,:,:);
-                [pha(:,iepc),c(:,iepc)]=dpOddEven(dblpl_tmp,ord);
+                [pha(:,iepc),c(:,iepc)]=dpOddEven(dblpl_tmp,ord,frac);
                 if mod(iepc-1,2)==0
                     pha(:,iepc)=-pha(:,iepc);
                     c(:,iepc)=-c(:,iepc);
@@ -49,7 +52,7 @@ function d=pha_crct_epi(d,dblpo,ro_pol,ref_pol,ord,pc_by_echo,single_side)
         A=x.^[0:ord];
         ref_pha=A*c_median;
     else
-        ref_pha=dpOddEven(dblpo,ord);
+        ref_pha=dpOddEven(dblpo,ord,frac);
     end
     if ~single_side
         d(:,find(ro_pol==ref_pol(1)),:,:,:)=d(:,find(ro_pol==ref_pol(1)),:,:,:)./...

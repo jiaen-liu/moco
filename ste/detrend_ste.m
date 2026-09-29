@@ -24,6 +24,16 @@ function dste=detrend_ste(dste, ishot_ref, par_regress)
     % always the first shot is blipless!!!
     dblpls_ref = d(:,:,:,(icyc_ref-1)*nshot_cyc+1);
     mag = sum(abs(dblpls_ref(:,1,:)).^2, 3).^0.5;
+
+    nblpl = ceil(nshot/nshot_cyc);
+    df_blpl = zeros(nblpl, 2);
+
+    if numel(dste.te)<3
+        warning('*** Detrending the frequency data of the EPI navigator is not supported with only two echoes per TR! ***');
+        dste.df_shot=zeros(nshot,1);
+        dste.df_blpl=df_blpl;
+        return;
+    end
     
     % generate a mask based on the magnitude
     mask = mask1d(mag,0.3);
@@ -33,8 +43,7 @@ function dste=detrend_ste(dste, ishot_ref, par_regress)
     te_odd = te(1:2:end);
     te_even = te(2:2:end);
     dte_odd = te_odd(2)-te_odd(1);
-    nblpl = ceil(nshot/nshot_cyc);
-    df_blpl = zeros(nblpl, 2);
+    
     iblpl = 1;
     pi2 = 2*pi;
     % calculate frequency of reference

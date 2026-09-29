@@ -1,5 +1,6 @@
 % History
 % 2022-12-21: Jiaen Liu: added philips support for reversed PE order for EPI
+% 2025-11-21: Jiaen Liu: accept k directly from para
 function [im_recon,flag,epsil,b,k,rr,t]=recon_mb_epi_beta(yn,para,varargin)
 % yn is nr by nk (ky*kz) by nch
 % some constants
@@ -129,70 +130,79 @@ function [im_recon,flag,epsil,b,k,rr,t]=recon_mb_epi_beta(yn,para,varargin)
     %
     pi2i=2*pi*1i;
     pi2=2*pi;
-    % 1. create the elements for cg recon based on nufft
-    %% prepare nufft parameters based on the motion and field input
-    md=para.md;
-    nk=0;
-    for im=1:nm
-        nk=nk+md(im).nk;
-    end
-    nshot_rep=para.n_interleaves*para.n_partitions/para.sense_rate_s;
-    % number of k-lines per repetition
-    nk=min(nk,nk_shot*nshot_rep);
-    % k space coordinate
-    k=zeros(3,nr,nk);
-    dp=zeros(nr,nk,precision);
-    kr_o=2*pi*((0:nr-1)-floor(nr/2))/lr;
-    % kr_o=2*pi*((0:nr-1)-floor(nr/2));
-    kr_o_int=(0:nr-1)-floor(nr/2);
-    %
-    ik=1;
-    % 
-    for im=1:nm
-        % in case of multiple repetitions
-        % the number of k-lines is less than one repetition
-        for i=1:min(nk,md(im).nk)
-            % calculate the new kspace coordinate due to rotation and
-            % B0 gradient
-            % k space position in clusters is defined
-            % in ste_motion.m
-            ii=i+nk*(irep-1);
-            ishot_m=mod(floor((ii-1)/nk_shot),nshot_rep)+1+...
-                    nshot_rep*(irep-1);
-            ikline_shot=mod(ii-1,nk_shot)+1;
-            if para.isgre
-                i_te_interl=1;
-                sign_dt=conditional(ro_pol_ref(mod(ie-1,para.nk_shot_ref)+1,...
-                                               floor((ie-1)/para.nk_shot_ref)+1),-1,1);
-            else
-                idx_shot=para.idx_reorder_shot(floor((ik-1)/nk_shot)+1);
-                i_te_interl=mod(idx_shot-1,n_interl)+1;
-                % Deal with polarity of readout lines
-                sign_dt=conditional(ro_pol(ikline_shot,ie),-1,1);
-            end
-            
-            kp_o=md(im).k(1,ii)*pi2/lp;
-            ks_o=md(im).k(2,ii)*pi2/ls;
-            m=md(im).m(:,:,ishot_m); % 6-parameter rigid motion
-            R=rot3d(m(:,1)); % in rad
-            dr=m(:,2); % in meter
-            ko=[kr_o;ones(1,nr)*kp_o;ones(1,nr)*ks_o];
-            gb0=md(im).gb0(:,ishot_m); % gradient of B0 change: unit (Hz/m)
-            db0=md(im).db0(ishot_m); % offset of B0 change (Hz)
-            dk=(sign_dt*dt*pi2)*(gb0*kr_o_int)+...
-               (te(ikline_shot,i_te_interl)*pi2)*gb0;
-            % k(:,:,ik)=D_res*R.'*(ko+dk);
-            k(:,:,ik)=D_res*(R.'*ko+dk);
-            % calculate the phase change due to translation and global
-            % B0 change
-            dp(:,ik)=exp(1i*((ko+dk).'*dr+...
-                             db0*(te(ikline_shot,i_te_interl)+...
-                                  sign_dt*dt*kr_o_int.')*pi2));
-            ik=ik+1;
+    if isfield(para,'k')
+        % 2025-11-21: JL, accept k directly from para
+        % -i for nufft
+        k=-1*para.k;
+        k=reshape(k,[3,numel(k)/3]);
+        dp=ones(numel(k)/3,1,precision);
+    else
+        % 1. create the elements for cg recon based on nufft
+        %% prepare nufft parameters based on the motion and field input
+        md=para.md;
+        nk=0;
+        for im=1:nm
+            nk=nk+md(im).nk;
         end
+        nshot_rep=para.n_interleaves*para.n_partitions/para.sense_rate_s;
+        % number of k-lines per repetition
+        nk=min(nk,nk_shot*nshot_rep);
+        % k space coordinate
+        k=zeros(3,nr,nk);
+        dp=zeros(nr,nk,precision);
+        kr_o=2*pi*((0:nr-1)-floor(nr/2))/lr;
+        % kr_o=2*pi*((0:nr-1)-floor(nr/2));
+        kr_o_int=(0:nr-1)-floor(nr/2);
+        %
+        ik=1;
+        % 
+        for im=1:nm
+            % in case of multiple repetitions
+            % the number of k-lines is less than one repetition
+            for i=1:min(nk,md(im).nk)
+                % calculate the new kspace coordinate due to rotation and
+                % B0 gradient
+                % k space position in clusters is defined
+                % in ste_motion.m
+                ii=i+nk*(irep-1);
+                ishot_m=mod(floor((ii-1)/nk_shot),nshot_rep)+1+...
+                        nshot_rep*(irep-1);
+                ikline_shot=mod(ii-1,nk_shot)+1;
+                if para.isgre
+                    i_te_interl=1;
+                    sign_dt=conditional(ro_pol_ref(mod(ie-1,para.nk_shot_ref)+1,...
+                                                   floor((ie-1)/para.nk_shot_ref)+1),-1,1);
+                else
+                    idx_shot=para.idx_reorder_shot(floor((ik-1)/nk_shot)+1);
+                    i_te_interl=mod(idx_shot-1,n_interl)+1;
+                    % Deal with polarity of readout lines
+                    sign_dt=conditional(ro_pol(ikline_shot,ie),-1,1);
+                end
+                
+                kp_o=md(im).k(1,ii)*pi2/lp;
+                ks_o=md(im).k(2,ii)*pi2/ls;
+                m=md(im).m(:,:,ishot_m); % 6-parameter rigid motion
+                R=rot3d(m(:,1)); % in rad
+                dr=m(:,2); % in meter
+                ko=[kr_o;ones(1,nr)*kp_o;ones(1,nr)*ks_o];
+                gb0=md(im).gb0(:,ishot_m); % gradient of B0 change: unit (Hz/m)
+                db0=md(im).db0(ishot_m); % offset of B0 change (Hz)
+                dk=(sign_dt*dt*pi2)*(gb0*kr_o_int)+...
+                   (te(ikline_shot,i_te_interl)*pi2)*gb0;
+                % k(:,:,ik)=D_res*R.'*(ko+dk);
+                k(:,:,ik)=D_res*(R.'*ko+dk);
+                % calculate the phase change due to translation and global
+                % B0 change
+                dp(:,ik)=exp(1i*((ko+dk).'*dr+...
+                                 db0*(te(ikline_shot,i_te_interl)+...
+                                      sign_dt*dt*kr_o_int.')*pi2));
+                ik=ik+1;
+            end
+        end
+        % -i for nufft
+        k=-reshape(k,[3,nr*nk]);
     end
-    k=-reshape(k,[3,nr*nk]); % -i for nufft
-                             % create nufft
+    % create nufft
     st=nufft_init_efficient(k(1:para.dimen,:).',si,J,...
                             kos.*si,precision,(si-1)/2);
     % st=nufft_init(k(1:para.dimen,:).',si,J,para.kos*si,(si-1)/2);
@@ -232,8 +242,13 @@ function [im_recon,flag,epsil,b,k,rr,t]=recon_mb_epi_beta(yn,para,varargin)
     idx_seg=zeros(2,nseg*nm);
     if nseg==1 
         idx_seg(1,1)=1;
-        % deal with multiple repetition
-        idx_seg(2,1)=min(para.md(1).nk,nk)*nr;
+        if isempty(para.md)
+            % 2025-11-22: JL, allow k is provided as an input
+            idx_seg(2,1)=size(k,2);
+        else
+            % deal with multiple repetition
+            idx_seg(2,1)=min(para.md(1).nk,nk)*nr;
+        end
         if nm>1
             for im=2:nm
                 for i=1:im-1
@@ -330,7 +345,6 @@ function [im_recon,flag,epsil,b,k,rr,t]=recon_mb_epi_beta(yn,para,varargin)
         end
         x0=reshape(im_recon,[n,1]);
         fprintf('%d,', i);
-        
     end
     t=toc;
     fprintf('\n');
@@ -401,8 +415,12 @@ function y=recon_mb_epi_cg_beta(x,para,retflag)
     md=para.md;
     % total lines
     nline=0;
-    for im=1:nm
-        nline=nline+md(im).nk;
+    if ~isempty(md)
+        for im=1:nm
+            nline=nline+md(im).nk;
+        end
+    else
+        nline=length(para.k)/3/nr;
     end
     clear md;
     nline_shot=para.nk_shot;

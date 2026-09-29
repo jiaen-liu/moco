@@ -1,6 +1,6 @@
-function reconAMRIMoCo(folder,mid,fPar,steps,varargin)
+function [im_recon]=reconAMRIMoCo(folder,mid,fPar,steps,varargin)
 % example reconAMRIMoCo ~/data/20200902_1 125 {'~/matlab/ste/steParMoCoB0Co.conf'}
-% in MATLAB console reconAMRIMoCo('~/data/20200902_1',125{'~/matlab/ste/steParMoCoB0Co.conf'},{'full'});
+% in MATLAB console reconAMRIMoCo('~/data/20200902_1',125,{'~/matlab/ste/steParMoCoB0Co.conf'},{'full'});
     if ischar(mid)
         mid=eval(mid);
     end
@@ -45,7 +45,11 @@ function reconAMRIMoCo(folder,mid,fPar,steps,varargin)
             end
             % retrieve parameters from the
             % configuration file
-            pari=readFilePar(fPar{j});
+            if isstruct(fPar)
+                pari=fPar(j);
+            else iscell(fPar)
+                pari=readFilePar(fPar{j});
+            end
             if ~isempty(par_overwrite)
                 pari=pass_var_struct(pari,par_overwrite);
             end

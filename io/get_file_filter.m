@@ -1,4 +1,5 @@
 function [fo,bytes]=get_file_filter(path,filter,recursive)
+    path=realpath(path);
     if nargin==1
         filter=path;
         [path,name,ext]=fileparts(filter);
@@ -12,7 +13,15 @@ function [fo,bytes]=get_file_filter(path,filter,recursive)
     end
     bytes=0;
     pathc=pwd;
-    cd(path);
+    try
+        cd(path);
+    catch me
+        cd(pathc);
+        fo=[];
+        bytes=0;
+        return;
+    end
+    
     f=dir;
     nf=length(f);
     fo=[];

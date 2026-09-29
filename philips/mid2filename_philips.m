@@ -1,6 +1,9 @@
-function f=mid2filename_philips(mid,ext)
+function f=mid2filename_philips(mid,ext,folder)
     if nargin<2
         ext='raw';
+    end
+    if nargin<3
+        folder='.';
     end
     if ischar(mid)
         f=mid;
@@ -14,7 +17,7 @@ function f=mid2filename_philips(mid,ext)
         str=num2str(mid(1),'_%d_');
         str=num2str(mid(2),[str,'%d_']);
         filter=['*',str,'*','.',ext];
-        f=get_file_filter('.',filter);
+        f=get_file_filter(folder,filter);
         return;
     end
     if mod(mid,1)==0
@@ -22,21 +25,21 @@ function f=mid2filename_philips(mid,ext)
         % str(str=='.')='_';
         str=['_',str,'_'];
         filter=['*',str,'*','.',ext];
-        f=get_file_filter('.',filter);
+        f=get_file_filter(folder,filter);
         if isstring(f) && length(f)>1
             warning('*** More than one files have the same MID! Trying fractional MID again ***');
             str=num2str(floor(mid)+0.2);
             str(str=='.')='_';
             str=['_',str,'_'];
             filter=['*',str,'*','.',ext];
-            f=get_file_filter('.',filter);
+            f=get_file_filter(folder,filter);
         end
     else
         str=num2str(mid);
         str(str=='.')='_';
         str=['_',str,'_'];
         filter=['*',str,'*','.',ext];
-        f=get_file_filter('.',filter);
+        f=get_file_filter(folder,filter);
     end
     if isempty(f)
         error('*** The requested file does not exist! ***');
